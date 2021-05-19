@@ -1,0 +1,3585 @@
+{
+    "entityType": "Application",
+    "name": "ORA",
+    "enforceCompleteSnapshots": false,
+    "propSheet": {"properties": []},
+    "components": [
+        {
+            "entityType": "Component",
+            "name": "ORACLE",
+            "created": 1395933090630,
+            "importAutomatically": false,
+            "useVfs": true,
+            "active": true,
+            "deleted": false,
+            "defaultVersionType": "FULL",
+            "cleanupDaysToKeep": 0,
+            "cleanupCountToKeep": 0,
+            "envPropDefs": [
+                {
+                    "name": "Cst_DIM_SSHHost",
+                    "label": "Cst_DIM_SSHHost",
+                    "type": "TEXT",
+                    "value": "lr2te614.groupe.generali.fr",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHPort",
+                    "label": "Cst_DIM_SSHPort",
+                    "type": "TEXT",
+                    "value": "22",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHUser",
+                    "label": "Cst_DIM_SSHUser",
+                    "type": "TEXT",
+                    "value": "deploy",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHPassword",
+                    "label": "Cst_DIM_SSHPassword",
+                    "type": "TEXT",
+                    "value": "deploy",
+                    "required": false,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHPrivateKey",
+                    "label": "Cst_DIM_SSHPrivateKey",
+                    "type": "TEXT",
+                    "required": false,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SASDepot",
+                    "label": "Cst_DIM_SASDepot",
+                    "type": "TEXT",
+                    "value": "\/products\/serena\/sas",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHTrust",
+                    "label": "Cst_DIM_SSHTrust",
+                    "type": "CHECKBOX",
+                    "value": "true",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHPassPhrase",
+                    "label": "Cst_DIM_SSHPassPhrase",
+                    "type": "TEXT",
+                    "required": false,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_Depot",
+                    "label": "Cst_DIM_Depot",
+                    "type": "TEXT",
+                    "required": true,
+                    "description": ""
+                }
+            ],
+            "versionPropDefs": [],
+            "propSheetGroup": {"propSheets": [
+                {
+                    "name": "code_station",
+                    "properties": [{
+                        "name": "repository",
+                        "value": "a63f71d9-85d3-448d-a77d-d2900fa117f1",
+                        "description": "",
+                        "secure": false
+                    }]
+                },
+                {
+                    "name": "custom",
+                    "properties": [{
+                        "name": "lib_groovy",
+                        "value": "\/\/ Common function\n\ndef logger (def String level,def String message,def String outputFileStr=null) {\n\tdef timpeStamp=new Date().format(\"yyyyMMdd-kkmmss\")\n\tprintln \"$timpeStamp:[$level] $message\"\n\tif (outputFileStr!=null && outputFileStr !=\"\" && new File(\"$outputFileStr\").getParentFile().isDirectory()){\n\t\tdef File outputFile = new File(outputFileStr)\n\t\toutputFile<< \"$timpeStamp:[$level] $message\\n\"\n\t}\n}\n\ndef int execute_oracle_sql(def  envp=[],def String command,def File SqlWrkDir=null){\n       \n       def cr=0\n       try{\n             println \"[I] Call sqlplus ....\"\n\t\t\t def commandtab=[]\n\t\t\t commandtab << \"bash\"\n\t\t\t commandtab << \"-c\"\n\t\t\t commandtab << command\n\/\/ pas de debug pour ne pas voir le mot de passe dans la log\n\/\/             println \"[D] commandtab:\"+commandtab\n\t\t\t \n             \/\/command=\"\"\"cmd \/c set\"\"\"\n                           \n              StringBuffer sbout = new StringBuffer()\n             StringBuffer sberr = new StringBuffer()\n             def process = commandtab.execute(envp,SqlWrkDir)\n             \n             def tout = process.consumeProcessOutputStream(sbout)\n             def terr = process.consumeProcessErrorStream(sberr)\n             \n               process.waitFor()                               \/\/ Wait for the command to finish\n             \n               def value = process.exitValue()\n               \n               if (value== 0){\n                      cr=0\n                      println sbout.toString()\n                      println sberr.toString()\n               }\n               else{\n                      cr=1\n                      println sbout.toString()\n                      println sberr.toString()\n               }\n             \n       }\n       catch(Exception e){\n             cr=1\n\/\/ pas d'ecriture de la commande pour ne pas voir le mot de passe dans la log\n\/\/             println \"[E] Fail to execute_oracle_sql : cmd=$command\\n Exception occured :\\n\"+e.getMessage()\n             println \"[E] Fail to execute_oracle_sql\\n Exception occured :\\n\"+e.getMessage()\n       \n       }\n       return cr\n}\n",
+                        "description": "",
+                        "secure": false
+                    }]
+                },
+                {
+                    "name": "template",
+                    "properties": []
+                }
+            ]},
+            "processes": [
+                {
+                    "name": "DEPLOY",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Folder",
+                            "label": "SBM_Folder",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Login",
+                            "label": "SBM_ORA_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Password",
+                            "label": "SBM_ORA_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_SID",
+                            "label": "SBM_ORA_SID",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Home",
+                            "label": "SBM_ORA_Home",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Path",
+                            "label": "SBM_ORA_Path",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Lib",
+                            "label": "SBM_ORA_Lib",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Package",
+                            "label": "SBM_Package",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Environnement",
+                            "label": "SBM_Environnement",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Script",
+                            "label": "SBM_Script",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Base",
+                            "label": "SBM_ORA_Base",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "Deploy",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "1b5e6aff11fd527c67a2945e34acbd",
+                                "from": "Deploy",
+                                "type": "SUCCESS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "Deploy",
+                                "x": -90,
+                                "y": 140
+                            },
+                            {
+                                "name": "1b5e6aff11fd527c67a2945e34acbd",
+                                "x": 0,
+                                "y": 420
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "Deploy",
+                                "width": 260,
+                                "height": 60
+                            },
+                            {
+                                "name": "1b5e6aff11fd527c67a2945e34acbd",
+                                "width": 80,
+                                "height": 50
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "13da907a-1791-4bb7-8c04-2417199aa610",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "1b5e6aff11fd527c67a2945e34acbd",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "Run Groovy Advance Script",
+                                "pluginName": "GroovyAdvance",
+                                "pluginVersion": 2,
+                                "properties": {
+                                    "externalLibJARList": "",
+                                    "externalDirList": "",
+                                    "scriptBody": "${p:lib_groovy}\n\n\n\n\/\/ Variables SBM\ndef String SBM_Environnement=\"${p:SBM_Environnement}\"\ndef String SBM_Depot=\"${p:SBM_Depot}\"\ndef String SBM_Projet=\"${p:SBM_Projet}\"\ndef String SBM_BaselineId=\"${p:SBM_BaselineId}\"\ndef String SBM_Nom_Log=\"${p:SBM_Nom_Log}\"\ndef String SBM_Folder=\"${p:SBM_Folder}\"\ndef String SBM_ORA_Login=\"${p:SBM_ORA_Login}\"\ndef String SBM_ORA_Password=\"${p:SBM_ORA_Password}\"\ndef String SBM_ORA_SID=\"${p:SBM_ORA_SID}\"\ndef String SBM_Script=\"${p:SBM_Script}\"\ndef String SBM_ORA_Base=\"${p:SBM_ORA_Base}\"\ndef String SBM_ORA_Home=\"${p:SBM_ORA_Home}\"\ndef String SBM_ORA_Path=\"${p:SBM_ORA_Path}\"\ndef String SBM_ORA_Lib=\"${p:SBM_ORA_Lib}\"\n\n\n\n\/\/ workDir\ndef String workDir=\"${SBM_Depot}\"+File.separator+\"${SBM_Projet}\"+File.separator+\"${SBM_BaselineId}\"\n\n\/\/ variables input SQL file\ndef String varL_SQLFiles=\"MAIN.sql:release,VALIDATE.sql:validate\"\ndef String sqlscriptname=\"\"\n\n\/\/ Log\ndef String SqlLogDir=workDir+File.separator+\"${SBM_Folder}\"+File.separator+\"log\"\ndef File LogDir=new File(workDir+File.separator+\"log\")\ndef String LogFile=workDir+File.separator+\"log\"+File.separator+\"${SBM_Nom_Log}\"\n\n\n\/\/ Environment \n\/\/ Verification input Environment\nif(!(SBM_Environnement.equals(\"Production\") || SBM_Environnement.equals(\"Pre-Production\") || SBM_Environnement.equals(\"Recette\") || SBM_Environnement.equals(\"Integration\"))){\n\tlogger(\"ERROR\",\"Mauvais Environnement\",LogFile)\n\tSystem.exit(1)\n}\n\/\/ Chargement oraEnv\nif (SBM_Environnement.equals(\"Production\")) {\n\tdef oraEnv=\"PRD\"\n\tlogger(\"TRACE\",\"Environnement = Production\",LogFile)\n} \nif (SBM_Environnement.equals(\"Pre-Production\")) {\n\tdef oraEnv=\"PPD\"\n\tlogger(\"TRACE\",\"Environnement = Pre-Production\",LogFile)\n}\nif (SBM_Environnement.equals(\"Recette\")) {\n\tdef oraEnv=\"REC\"\n\tlogger(\"TRACE\",\"Environnement = Recette\",LogFile)\n}\nif (SBM_Environnement.equals(\"Integration\")) {\n\tdef oraEnv=\"INT\"\n\tlogger(\"TRACE\",\"Environnement = Intergration\",LogFile)\n}\nlogger(\"INFO\",\"lancement de la phase de deploiement\",LogFile)\n\ndef String command=\"\"\"cmd \/c set\"\"\"\n\n\/\/ Calcul des var environnement\n\t\t\/\/ Calcul des var environnement\n\t\tdef Map env=System.getenv()\n\t\tdef  envp=[]\n\t\tenv.each{ key,val->\n\t\t\tif( !(key==\"ORACLE_BASE\" ||key==\"ORACLE_SID\"||key==\"ORACLE_BASE\"||key==\"ORACLE_HOME\"|| key==\"PATH\"||key==\"LD_LIBRARY_PATH\" )) {\n\t\t\t\t\t envp.add(\"$key=${val}\")\n\t\t\t}\n\t\t}\n\t\t\n\/\/ ajout des var environement specifique Oracle\nenvp.add(\"ORACLE_BASE=${SBM_ORA_Base}\")\nenvp.add(\"ORACLE_SID=${SBM_ORA_SID}\")\nenvp.add(\"ORACLE_HOME=${SBM_ORA_Home}\")\nenvp.add(\"PATH=${SBM_ORA_Path}\")\nenvp.add(\"LD_LIBRARY_PATH=${SBM_ORA_Lib}\")\n\n\ndef String s=varL_SQLFiles\ndef tab1=s.split(\",\")\ntab1.each{\n\tdef Boolean finalResultKO=false\n\tdef tab2=it.split(\":\")\n\tdef file=tab2[0].trim()\n\tdef subdir=tab2[1].trim()\n\tsqlfile=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+file)\n\tsqlsubdir=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir)\n\n\tdef String sqlfileContent=sqlfile.text\n\tsqlfileContent.eachLine { itsql->\n\t\tdef String sqlline=itsql.trim()\n\t\tsqlscript=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+File.separator+subdir+File.separator+sqlline)\n\t\tsqlscriptname=sqlscript.getName()\n\t\treslogFile=new File(SqlLogDir+File.separator+sqlscriptname+\".res\")\n\t\terrlogFile=new File(SqlLogDir+File.separator+sqlscriptname+\".err\")\n\t\tlogger(\"INFO\",\"execution de \"+sqlscriptname,LogFile)\n\t\t\n\t\ttry{\n\t\t\t\n\t\t\tcommand=\"${SBM_Script}; echo ''| sqlplus ${SBM_ORA_Login}\/${SBM_ORA_Password}@${SBM_ORA_SID} @${sqlscript} 1> ${reslogFile} 2>> ${LogFile}\"\n\n\t\t\t\/\/ calcul du path du script execute pour deplacement dans la methode - le script peut contenir des include en path relatif\n\t\t\tdef File SqlWrkDir=sqlscript.getParentFile()\n\t\t\tdef value=execute_oracle_sql(envp,command,SqlWrkDir)\n\t\t\tif (value!=0){\n\t\t\t    logger(\"ERROR\",\"Probleme lors de l'execution de la commande  $command \",LogFile)\n\t\t\t    System.exit(1)\n\t\t\t} else {\n\t\t\t}\n\t\t}\n\t\tcatch (Exception e){\n\t\t\tlogger(\"ERROR\",e.getMessage(),LogFile)\n\t\t\tSystem.exit(1)\n\t\t}\n\n\t\tlogger(\"INFO\",\"verification des logs \"+reslogFile,LogFile)\n\t\tdef String logContent=reslogFile.text\n\t\tdef Boolean reserrorlog=false\n\t\tdef Boolean oraerrorlog=false\n\t\tdef Boolean sperrorlog=false\n\t\tdef Boolean prompterrorlog=true\n\t\tlogContent.eachLine { logit->\n\t\t\tif(oraerrorlog==false){\n\t\t\t\tif(logit.matches(\"(?i).*ORA-[0-9]{5}.*\")){\n\t\t\t\t\treserrorlog=true\n\t\t\t\t\toraerrorlog=true\n\t\t\t\t}\n\t\t\t}\n\t\t\tif(sperrorlog==false){\n\t\t\t\tif(logit.matches(\"(?i).*SP2-[0-9]{4}.*\")){\n\t\t\t\t\treserrorlog=true\n\t\t\t\t\tsperrorlog=true\n\t\t\t\t}\n\t\t\t}\n\t\t\tif(logit.matches(\"(?i).*SQL>.*\")){\n\t\t\t\tprompterrorlog=false\n\t\t\t} \n\t\t}\n\t\tif(reserrorlog==false){\n\t\t\tlogger(\"INFO\",\"analyse de  \"+reslogFile+\" terminee - pas de warning detecte\",LogFile)\n\t\t\t\n\t\t} else {\n\t\t\tlogger(\"WARN\",\"analyse de  \"+reslogFile+\" terminee - warning(s) detecte(s)\",LogFile)\n\t\t\tif(oraerrorlog==true){\n\t\t\t\tlogger(\"WARN\",\"erreur ORA-xxxxx dans la log : \"+reslogFile,LogFile)\n\t\t\t}\n\t\t\tif(sperrorlog==true){\n\t\t\t\tlogger(\"WARN\",\"erreur SP2-xxxx dans la log : \"+reslogFile,LogFile)\n\t\t\t}\n\t\t\tif(prompterrorlog==true){\n\t\t\t\tlogger(\"WARN\",\"absence de prompt SQL trouve dans la log : \"+reslogFile,LogFile)\n\t\t\t}\n\t\t\tfinalResultKO=true\n\t\t}\n\t}\n\tif (finalResultKO) {\n\t\tlogger(\"ERROR\",\"Echec du deploiement\",LogFile)\n\t\tSystem.exit(1)\n\t}\n}\n\nSystem.exit(0)\n"
+                                },
+                                "type": "plugin",
+                                "name": "Deploy",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "DEPLOY_BACKUP",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Folder",
+                            "label": "SBM_Folder",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Login",
+                            "label": "SBM_ORA_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Password",
+                            "label": "SBM_ORA_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_SID",
+                            "label": "SBM_ORA_SID",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Home",
+                            "label": "SBM_ORA_Home",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Path",
+                            "label": "SBM_ORA_Path",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Lib",
+                            "label": "SBM_ORA_Lib",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Environnement",
+                            "label": "SBM_Environnement",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Script",
+                            "label": "SBM_Script",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Base",
+                            "label": "SBM_ORA_Base",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "DeployBackup",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "1b5e6aff11fd527c67a2945e34acbd",
+                                "from": "DeployBackup",
+                                "type": "SUCCESS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "1b5e6aff11fd527c67a2945e34acbd",
+                                "x": 5,
+                                "y": 240
+                            },
+                            {
+                                "name": "DeployBackup",
+                                "x": -85,
+                                "y": 120
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "DeployBackup",
+                                "width": 260,
+                                "height": 60
+                            },
+                            {
+                                "name": "1b5e6aff11fd527c67a2945e34acbd",
+                                "width": 80,
+                                "height": 50
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "80e9c5ce-4f53-424f-b7c4-07e5253ff984",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "1b5e6aff11fd527c67a2945e34acbd",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "Run Groovy Advance Script",
+                                "pluginName": "GroovyAdvance",
+                                "pluginVersion": 2,
+                                "properties": {
+                                    "externalLibJARList": "",
+                                    "externalDirList": "",
+                                    "scriptBody": "\n  \n ${p:lib_groovy}\n\n\n\n\/\/ Variables SBM\ndef String SBM_Environnement=\"${p:SBM_Environnement}\"\ndef String SBM_Depot=\"${p:SBM_Depot}\"\ndef String SBM_Projet=\"${p:SBM_Projet}\"\ndef String SBM_BaselineId=\"${p:SBM_BaselineId}\"\ndef String SBM_Nom_Log=\"${p:SBM_Nom_Log}\"\ndef String SBM_Folder=\"${p:SBM_Folder}\"\ndef String SBM_ORA_Login=\"${p:SBM_ORA_Login}\"\ndef String SBM_ORA_Password=\"${p:SBM_ORA_Password}\"\ndef String SBM_ORA_SID=\"${p:SBM_ORA_SID}\"\ndef String SBM_Script=\"${p:SBM_Script}\"\ndef String SBM_ORA_Base=\"${p:SBM_ORA_Base}\"\ndef String SBM_ORA_Home=\"${p:SBM_ORA_Home}\"\ndef String SBM_ORA_Path=\"${p:SBM_ORA_Path}\"\ndef String SBM_ORA_Lib=\"${p:SBM_ORA_Lib}\"\n\n\n\n\/\/ workDir\ndef String workDir=\"${SBM_Depot}\"+File.separator+\"${SBM_Projet}\"+File.separator+\"${SBM_BaselineId}\"\n\n\/\/ variables input SQL file\n def String varL_SQLFiles=\"REWIND.sql:rollback\"\ndef String sqlscriptname=\"\"\n\n\/\/ Log\ndef String SqlLogDir=workDir+File.separator+\"${SBM_Folder}\"+File.separator+\"log\"\ndef File LogDir=new File(workDir+File.separator+\"log\")\ndef String LogFile=workDir+File.separator+\"log\"+File.separator+\"${SBM_Nom_Log}\"\n\n\n\/\/ Environment \n\/\/ Verification input Environment\nif(!(SBM_Environnement.equals(\"Production\") || SBM_Environnement.equals(\"Pre-Production\") || SBM_Environnement.equals(\"Recette\") || SBM_Environnement.equals(\"Integration\"))){\n\tlogger(\"ERROR\",\"Mauvais Environnement\",LogFile)\n\tSystem.exit(1)\n}\n\/\/ Chargement oraEnv\nif (SBM_Environnement.equals(\"Production\")) {\n\tdef oraEnv=\"PRD\"\n\tlogger(\"TRACE\",\"Environnement = Production\",LogFile)\n} \nif (SBM_Environnement.equals(\"Pre-Production\")) {\n\tdef oraEnv=\"PPD\"\n\tlogger(\"TRACE\",\"Environnement = Pre-Production\",LogFile)\n}\nif (SBM_Environnement.equals(\"Recette\")) {\n\tdef oraEnv=\"REC\"\n\tlogger(\"TRACE\",\"Environnement = Recette\",LogFile)\n}\nif (SBM_Environnement.equals(\"Integration\")) {\n\tdef oraEnv=\"INT\"\n\tlogger(\"TRACE\",\"Environnement = Intergration\",LogFile)\n}\nlogger(\"INFO\",\"lancement de la phase de rollback\",LogFile)\n\ndef String command=\"\"\"cmd \/c set\"\"\"\n\n\/\/ Calcul des var environnement\n\t\t\/\/ Calcul des var environnement\n\t\tdef Map env=System.getenv()\n\t\tdef  envp=[]\n\t\tenv.each{ key,val->\n\t\t\tif( !(key==\"ORACLE_BASE\" ||key==\"ORACLE_SID\"||key==\"ORACLE_BASE\"||key==\"ORACLE_HOME\"|| key==\"PATH\"||key==\"LD_LIBRARY_PATH\" )) {\n\t\t\t\t\t envp.add(\"$key=${val}\")\n\t\t\t}\n\t\t}\n\t\t\n\/\/ ajout des var environement specifique Oracle\nenvp.add(\"ORACLE_BASE=${SBM_ORA_Base}\")\nenvp.add(\"ORACLE_SID=${SBM_ORA_SID}\")\nenvp.add(\"ORACLE_HOME=${SBM_ORA_Home}\")\nenvp.add(\"PATH=${SBM_ORA_Path}\")\nenvp.add(\"LD_LIBRARY_PATH=${SBM_ORA_Lib}\")\n\n\ndef String s=varL_SQLFiles\ndef tab1=s.split(\",\")\ntab1.each{\n\tdef tab2=it.split(\":\")\n\tdef file=tab2[0].trim()\n\tdef subdir=tab2[1].trim()\n\tsqlfile=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+file)\n\tsqlsubdir=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir)\n\n\tdef String sqlfileContent=sqlfile.text\n\tsqlfileContent.eachLine { itsql->\n\t\tdef String sqlline=itsql.trim()\n\t\tsqlscript=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+File.separator+subdir+File.separator+sqlline)\n\t\tsqlscriptname=sqlscript.getName()\n\t\treslogFile=new File(SqlLogDir+File.separator+sqlscriptname+\".res\")\n\t\terrlogFile=new File(SqlLogDir+File.separator+sqlscriptname+\".err\")\n\t\tlogger(\"INFO\",\"execution de \"+sqlscriptname,LogFile)\n\t\t\n\t\ttry{\n\t\t\t\n\t\t\tcommand=\"${SBM_Script}; echo ''| sqlplus ${SBM_ORA_Login}\/${SBM_ORA_Password}@${SBM_ORA_SID} @${sqlscript} 1> ${reslogFile} 2> ${errlogFile}\"\n\n\t\t\t\/\/ calcul du path du script execute pour deplacement dans la methode - le script peut contenir des include en path relatif\n\t\t\tdef File SqlWrkDir=sqlscript.getParentFile()\n\t\t\tdef value=execute_oracle_sql(envp,command,SqlWrkDir)\n\t\t\tif (value!=0){\n\t\t\t    logger(\"ERROR\",\"Probleme lors de l'execution de la commande  $command \",LogFile)\n\t\t\t    System.exit(1)\n\t\t\t} else {\n\t\t\t}\n\t\t}\n\t\tcatch (Exception e){\n\t\t\tlogger(\"ERROR\",e.getMessage(),LogFile)\n\t\t\tSystem.exit(1)\n\t\t}\n\n\t\tlogger(\"INFO\",\"verification des logs \"+reslogFile,LogFile)\n\t\tdef String logContent=reslogFile.text\n\t\tdef Boolean reserrorlog=false\n\t\tdef Boolean oraerrorlog=false\n\t\tdef Boolean sperrorlog=false\n\t\tdef Boolean prompterrorlog=true\n\t\tlogContent.eachLine { logit->\n\t\t\tif(oraerrorlog==false){\n\t\t\t\tif(logit.matches(\"(?i).*ORA-[0-9]{5}.*\")){\n\t\t\t\t\treserrorlog=true\n\t\t\t\t\toraerrorlog=true\n\t\t\t\t}\n\t\t\t}\n\t\t\tif(sperrorlog==false){\n\t\t\t\tif(logit.matches(\"(?i).*SP2-[0-9]{4}.*\")){\n\t\t\t\t\treserrorlog=true\n\t\t\t\t\tsperrorlog=true\n\t\t\t\t}\n\t\t\t}\n\t\t\tif(logit.matches(\"(?i).*SQL>.*\")){\n\t\t\t\tprompterrorlog=false\n\t\t\t} \n\t\t}\n\t\tif(reserrorlog==false){\n\t\t\tlogger(\"INFO\",\"analyse de  \"+reslogFile+\" terminée - pas de warning detecté\",LogFile)\n\t\t\t\n\t\t} else {\n\t\t\tlogger(\"WARN\",\"analyse de  \"+reslogFile+\" terminée - warning(s) detecté(s)\",LogFile)\n\t\t\tif(oraerrorlog==true){\n\t\t\t\tlogger(\"WARN\",\"erreur ORA-xxxxx dans la log : \"+reslogFile,LogFile)\n\t\t\t}\n\t\t\tif(sperrorlog==true){\n\t\t\t\tlogger(\"WARN\",\"erreur SP2-xxxx dans la log : \"+reslogFile,LogFile)\n\t\t\t}\n\t\t\tif(prompterrorlog==true){\n\t\t\t\tlogger(\"WARN\",\"absence de prompt SQL trouvé dans la log : \"+reslogFile,LogFile)\n\t\t\t}\n\t\t\tSystem.exit(1)\n\t\t}\n\t}\n}\nSystem.exit(0)\n"
+                                },
+                                "type": "plugin",
+                                "name": "DeployBackup",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "PREP_DEPLOY",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Folder",
+                            "label": "SBM_Folder",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Login",
+                            "label": "SBM_ORA_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Password",
+                            "label": "SBM_ORA_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_SID",
+                            "label": "SBM_ORA_SID",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Home",
+                            "label": "SBM_ORA_Home",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Path",
+                            "label": "SBM_ORA_Path",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Lib",
+                            "label": "SBM_ORA_Lib",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Package",
+                            "label": "SBM_Package",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Environnement",
+                            "label": "SBM_Environnement",
+                            "type": "TEXT",
+                            "required": false,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Script",
+                            "label": "SBM_Script",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_ORA_Base",
+                            "label": "SBM_ORA_Base",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "CreateWorkspace",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "PrepDeploy",
+                                "from": "DownloadPackage",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "DownloadPackage",
+                                "from": "CreateWorkspace",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "1b5e6aff11fd527c67a2945e34acbd",
+                                "from": "PrepDeploy",
+                                "type": "SUCCESS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "1b5e6aff11fd527c67a2945e34acbd",
+                                "x": 0,
+                                "y": 420
+                            },
+                            {
+                                "name": "PrepDeploy",
+                                "x": 253.5,
+                                "y": 362
+                            },
+                            {
+                                "name": "DownloadPackage",
+                                "x": -130.5,
+                                "y": 270
+                            },
+                            {
+                                "name": "CreateWorkspace",
+                                "x": 105.5,
+                                "y": 158
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "PrepDeploy",
+                                "width": 260,
+                                "height": 60
+                            },
+                            {
+                                "name": "1b5e6aff11fd527c67a2945e34acbd",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "CreateWorkspace",
+                                "width": 260,
+                                "height": 60
+                            },
+                            {
+                                "name": "DownloadPackage",
+                                "width": 310,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "988ada10-3592-42e7-8451-d2aa2caae119",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "1b5e6aff11fd527c67a2945e34acbd",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "Run Groovy Advance Script",
+                                "pluginName": "GroovyAdvance",
+                                "pluginVersion": 2,
+                                "properties": {
+                                    "externalLibJARList": "",
+                                    "externalDirList": "",
+                                    "scriptBody": "${p:lib_groovy}\n\n\n\n\/\/ Variables SBM\ndef String SBM_Environnement=\"${p:SBM_Environnement}\"\ndef String SBM_Depot=\"${p:SBM_Depot}\"\ndef String SBM_Projet=\"${p:SBM_Projet}\"\ndef String SBM_BaselineId=\"${p:SBM_BaselineId}\"\ndef String SBM_Package=\"${p:SBM_Package}\"\ndef String SBM_Nom_Log=\"${p:SBM_Nom_Log}\"\ndef String SBM_Folder=\"${p:SBM_Folder}\"\ndef String SBM_ORA_Login=\"${p:SBM_ORA_Login}\"\ndef String SBM_ORA_Password=\"${p:SBM_ORA_Password}\"\ndef String SBM_ORA_SID=\"${p:SBM_ORA_SID}\"\ndef String SBM_Script=\"${p:SBM_Script}\"\n\n\n\/\/ workDir\ndef String workDir=\"${SBM_Depot}\"+File.separator+\"${SBM_Projet}\"+File.separator+\"${SBM_BaselineId}\"\n\/\/ variables input SQL file\ndef String varL_SQLFiles=\"MAIN.sql:release,VALIDATE.sql:validate,REWIND.sql:rollback\"\n\/\/ Log\ndef String SqlLogDir=workDir+File.separator+\"${SBM_Folder}\"+File.separator+\"log\"\ndef File LogDir=new File(workDir+File.separator+\"log\")\ndef String LogFile=workDir+File.separator+\"log\"+File.separator+\"${SBM_Nom_Log}\"\n\n\/\/ Test Cmd Line\ndef String cmdLine=\"select sysdate from dual;\"\n\n\/\/ Environnement\n\/\/ Verification input\nif(!(SBM_Environnement.equals(\"Production\") || SBM_Environnement.equals(\"Pre-Production\") || SBM_Environnement.equals(\"Recette\") || SBM_Environnement.equals(\"Integration\"))){\n\tlogger(\"ERROR\",\"Mauvais Environnement\")\n\tSystem.exit(1)\n}\n\n\/\/ Chargement oraEnv\nif (SBM_Environnement.equals(\"Production\")) {\n\tdef oraEnv=\"PRD\"\n\tlogger(\"TRACE\",\"Environnement = Production\")\n}\nif (SBM_Environnement.equals(\"Pre-Production\")) {\n\tdef oraEnv=\"PPD\"\n\tlogger(\"TRACe\",\"Environnement = Pre-Production\")\n}\nif (SBM_Environnement.equals(\"Recette\")) {\n\tdef oraEnv=\"REC\"\n\tlogger(\"TRACE\",\"Environnement = Recette\")\n}\nif (SBM_Environnement.equals(\"Integration\")) {\n\tdef oraEnv=\"INT\"\n\tlogger(\"TRACE\",\"Environnement = Intergration\")\n}\n\n\n\/\/ Purge ${SBM_Depot}\/${SBM_Projet}\ndef File OldWorkDir\nOldWorkDir=new File(\"${SBM_Depot}\"+File.separator+\"${SBM_Projet}\"+File.separator+\"${SBM_BaselineId}\")\nlogger(\"INFO\",\"suppression de $OldWorkDir\")\nif(OldWorkDir.isDirectory()){\n\tif(! OldWorkDir.deleteDir()){\n\t\tlogger(\"ERROR\",\"Impossible de supprimer \"+OldWorkDir.getAbsolutePath())\n\t\tSystem.exit(1)\n\t}\n}\n\n\n\n\/\/ creation du nouveau work dir vierge\ndef File NewWorkDir=new File(\"${workDir}\"+File.separator+\"${SBM_Projet}\")\nif(!NewWorkDir.mkdirs()){\n\tlogger(\"ERROR\",\"Impossible de creer le repertoire $NewWorkDir\")\n\tSystem.exit(1)\n} else {\n\tlogger(\"INFO\",\"creation de $NewWorkDir\")\n}\n\nif(!LogDir.mkdirs()){\n\tlogger(\"ERROR\",\"Impossible de creer le repertoire $LogDir\")\n\tSystem.exit(1)\n} else {\n\tlogger(\"INFO\",\"creation de $LogDir\")\n}\nSystem.exit(0)\n\n\/\/ ###################################### FIN CREATE WORKSPACE"
+                                },
+                                "type": "plugin",
+                                "name": "CreateWorkspace",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:environment\/Cst_DIM_SSHHost}",
+                                    "sshPort": "${p:environment\/Cst_DIM_SSHPort}",
+                                    "sshUser": "dmsys",
+                                    "sshPassword": "pbe{cl2eT6V6\/2twWZhVgV0XbZ\/0RATiiKtE}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{zWP0cChbj3Fyc3JUNGhLcxYRoaGrU8ob}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "true",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:environment\/Cst_DIM_SASDepot}\/${p:SBM_BaselineId}\/ORACLE\/${p:SBM_Folder}\/${p:SBM_Package}",
+                                    "localDestFile": "${p:SBM_Depot}\/${p:SBM_Projet}\/${p:SBM_BaselineId}\/${p:SBM_Package}"
+                                },
+                                "type": "plugin",
+                                "name": "DownloadPackage",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "Run Groovy Advance Script",
+                                "pluginName": "GroovyAdvance",
+                                "pluginVersion": 2,
+                                "properties": {
+                                    "externalLibJARList": "",
+                                    "externalDirList": "",
+                                    "scriptBody": "${p:lib_groovy}\n\n\n\/\/ Variables SBM\ndef String SBM_Environnement=\"${p:SBM_Environnement}\"\ndef String SBM_Depot=\"${p:SBM_Depot}\"\ndef String SBM_Projet=\"${p:SBM_Projet}\"\ndef String SBM_BaselineId=\"${p:SBM_BaselineId}\"\ndef String SBM_Package=\"${p:SBM_Package}\"\ndef String SBM_Nom_Log=\"${p:SBM_Nom_Log}\"\ndef String SBM_Folder=\"${p:SBM_Folder}\"\ndef String SBM_ORA_Login=\"${p:SBM_ORA_Login}\"\ndef String SBM_ORA_Password=\"${p:SBM_ORA_Password}\"\ndef String SBM_ORA_SID=\"${p:SBM_ORA_SID}\"\ndef String SBM_Script=\"${p:SBM_Script}\"\ndef String SBM_ORA_Base=\"${p:SBM_ORA_Base}\"\ndef String SBM_ORA_Home=\"${p:SBM_ORA_Home}\"\ndef String SBM_ORA_Path=\"${p:SBM_ORA_Path}\"\ndef String SBM_ORA_Lib=\"${p:SBM_ORA_Lib}\"\n\n\n\n\n\/\/ workDir\ndef String workDir=\"${SBM_Depot}\"+File.separator+\"${SBM_Projet}\"+File.separator+\"${SBM_BaselineId}\"\n\n\/\/ variables input SQL related\ndef String varL_SQLFiles=\"MAIN.sql:release,VALIDATE.sql:validate,REWIND.sql:rollback\"\ndef String cmdLine=\"select sysdate from dual;\"\ndef String sqlscriptname=\"\"\ndef File sqlscript=null\n\/\/ Log\ndef String SqlLogDir=workDir+File.separator+\"${SBM_Folder}\"+File.separator+\"log\"\n\ndef String LogFile=workDir+File.separator+\"log\"+File.separator+\"${SBM_Nom_Log}\"\n\n\n\n\/\/ Environnement \n\/\/ Verification input\nif(!(SBM_Environnement.equals(\"Production\") || SBM_Environnement.equals(\"Pre-Production\") || SBM_Environnement.equals(\"Recette\") || SBM_Environnement.equals(\"Integration\"))){\n logger(\"ERROR\",\"Mauvais Environnement\",LogFile)\n System.exit(1)\n}\n\n\/\/ Chargement oraEnv\ndef String oraEnv=\"\"\ndef String oraRpl=\"\"\nif (SBM_Environnement.equals(\"Production\")) {\n oraEnv=\"PRD\"\n\n} \nif (SBM_Environnement.equals(\"Pre-Production\")) {\n oraEnv=\"PPD\"\n oraRpl=\"QUAL\"\n}\nif (SBM_Environnement.equals(\"Recette\")) {\n oraEnv=\"REC\"\n oraRpl=\"REC\"\n}\nif (SBM_Environnement.equals(\"Integration\")) {\n oraEnv=\"INT\"\n oraRpl=\"INT\"\n}\nlogger(\"TRACE\",\"Environnement = \"+oraEnv)\n \n \/\/ decompression du package\nlogger(\"INFO\",\"Decompression du package ${workDir}\"+File.separator+\"${SBM_Package} dans ${workDir}\"+File.separator+\"${SBM_Folder}\",LogFile)\ntry{\n       def ant = new AntBuilder()\/\/ create an antbuilder\n\n        ant.unzip(  src:\"${workDir}\"+File.separator+\"${SBM_Package}\",\n                    dest:\"${workDir}\"+File.separator+\"${SBM_Folder}\",\n                    overwrite:\"false\"\n       )\n\n\n }\ncatch (Exception e) {\n       e.printStackTrace()\n       logger(\"ERROR\",\"Erreur durant la decompression du package ${workDir}\"+File.separator+\"${SBM_Package}\",LogFile)\n       logger(\"ERROR\", e.getMessage(),LogFile)\n       System.exit(1)\n}\n\nlogger(\"INFO\",\"Decompression du package ${workDir}\"+File.separator+\"${SBM_Package} dans ${workDir}\"+File.separator+\"${SBM_Folder} achevée\",LogFile)\n\n\n\n\/\/ suppression du package\n\ntempPackage=new File(workDir+File.separator+\"${SBM_Package}\")\n       if(tempPackage.exists()){\n             if(! tempPackage.delete()){\n                    logger(\"ERROR\",\"Impossible de supprimer \"+tempPackage.getAbsolutePath())\n                    System.exit(1)\n             }\n       }\nlogger(\"INFO\",\"Suppression du package ${tempPackage}\",LogFile)\n\n\/\/ Extraction des formats de conversion\ndef myRegEx = \/.*Oracle.*dof(.*)t(.*)conv.*zip\/\nmatcher = ( SBM_Package =~ myRegEx )\ndef boolean flagConvert=false\ndef String fmtFrom=\"\"\ndef String fmtTo=\"\"\nif (matcher.matches()) {\n\tfmtFrom=matcher[0][1]\n\tfmtTo=matcher[0][2]\n\tlogger(\"INFO\",\"Conversion extraite du nom du package : de ${fmtFrom} vers ${fmtTo}\",LogFile)\n\tflagConvert=true\n}\n\n\/\/ creation repertoire des logs SQL \nlogger(\"TRACE\",\"creation repertoire des logs SQL\")\nif(! new File(SqlLogDir).isDirectory() ){\n\tif(! new File(SqlLogDir).mkdirs()){\n\t\t  logger (\"ERROR\",\"Impossible de creer le repertoire \"+SqlLogDir,LogFile)\n\t\t  System.exit(1)\n\t}\n}\n\nlogger(\"INFO\",\"Debut de la Verification du Livrable\",LogFile)\n\n\n\n\ndef String s=varL_SQLFiles\ndef tab1=s.split(\",\")\ntab1.each{\n       def tab2=it.split(\":\")\n       def file=tab2[0].trim()\n       def subdir=tab2[1].trim()\n       def File sqlfile=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+file)\n\t   logger(\"TRACE\",\"fichier en cours \"+sqlfile.getAbsolutePath())\n       if(sqlfile.exists()){\n             if(sqlfile.length() == 0){\n                    logger(\"ERROR\",\"taille du fichier = \"+sqlfile.length(),LogFile)\n                    System.exit(1)\n             } else {\n                    logger(\"TRACE\",\"le fichier \"+sqlfile.getName()+\" est valide - size = \"+sqlfile.length())\n\n\t\t\t\t\t\/\/ Remplacement de <ENV> par sa valeur\n\t\t\t\t\tfileText = sqlfile.text\n\t\t\t\t\tfileText = fileText.replaceAll(\"<ENV>\", \"${oraRpl}\")\n\t\t\t\t\tsqlfile.write(fileText)\n             }\n       } else {\n              logger(\"ERROR\",sqlfile.getAbsolutePath()+\" n'existe pas\",LogFile)\n              System.exit(1)\n       }\n       logger(\"TRACE\",\"verification du repertoire \"+subdir)\n       sqlsubdir=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir)\n       logger(\"TRACE\",\"verification du repertoire \"+sqlsubdir)\n       if(!sqlsubdir.isDirectory()){\n             logger(\"ERROR\",\"le repertoire \"+sqlsubdir+\" n'existe pas\",LogFile)\n             System.exit(1)\n       } else {\n             logger(\"TRACE\",\"le repertoire \"+sqlsubdir+\" existe\")\n\t\t\t \/\/ Gestion des define\n\t\t\t def boolean flagDefines = false\n\t\t\t def defineFile= new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir+File.separator+\"defVar.${oraRpl}\")\n\t\t\t if (defineFile.exists()) {\n\t\t\t\tdefineFile.append(\"\\n\") \n\t\t\t\tflagDefines = true\n\t\t\t\tlogger(\"INFO\",\"Presence fichier defines\",LogFile)\n\t\t\t }\n\t\t\t \n             logger(\"TRACE\",\"analyse du contenu de : \"+sqlfile)\n             def String sqlfileContent=sqlfile.text\n             sqlfileContent.eachLine { itsql->\n             def String sqlline=itsql.trim()\n             logger(\"TRACE\",\"contenu de la ligne : \"+sqlline)\n             logger(\"TRACE\",\"test existence script  : \"+sqlsubdir+File.separator+sqlline)\n\t\t\t \n \t\t\t if (flagConvert) {\n\t\t\t\ttry{\n\t\t\t\t\tsqltmpscript=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir+File.separator+sqlline)\n\t\t\t\t\tdef String sqlFileName=sqltmpscript.getAbsolutePath()\n\t\t\t\t\tdef command = \"iconv -f ${fmtFrom} -t ${fmtTo} -o ${sqlFileName}.iconv.tmp ${sqlFileName}\"\/\/ Create the String\n\t\t\t\t\tlogger(\"TRACE\",\"cmd: \"+command)\n\t\t\t\t\tdef value=execute_oracle_sql(null,command)\n\t\t\t\t\tlogger(\"TRACE\",\"value=$value\")\n\t\t\t\t\tlogger(\"TRACE\",\"return code: ${value}\")\n\t\t\t\t\tif(value==0){\n\/\/\t\t\t\t\t\t(new AntBuilder()).copy (file : \"${sqlFileName}.iconv.tmp\", tofile : \"${sqlFileName}\")\n\t\t\t\t\t\tnew File(\"${sqlFileName}.iconv.tmp\").renameTo(sqlFileName) \n\t\t\t\t\t\tlogger(\"TRACE\",\"Succes de la conversion du fichier ${sqlFileName}\")\n\t\t\t\t\t}\n\t\t\t\t\telse{\n\t\t\t\t\t\tlogger(\"ERROR\",\"Echec de la conversion du fichier ${sqlFileName}\",LogFile)\n\t\t\t\t\t\tSystem.exit(1)\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\tcatch (Exception e){\n\t\t\t\t\tlogger(\"ERROR\",e.getMessage(),LogFile)\n\t\t\t\t\tSystem.exit(1)\n\t\t\t\t}\n\t\t\t }\n\n             sqlscript=new File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir+File.separator+sqlline)\n             logger(\"TRACE\",\"test valorisation full path : ${sqlscript}\")\n             if(sqlscript.isFile()){\n\t\t\t\t sqlscriptname=sqlscript.getName()\n\t\t\t\t logger(\"TRACE\",\"nom du script \"+sqlscriptname)\n                    if(sqlscript.length() == 0){\n                           logger(\"ERROR\",\"taille de \"+sqlscript+\" = \"+sqlscript.length(),LogFile)\n                          System.exit(1)\n                    } else {\n\t\t\t\t\t\t\tlogger(\"INFO\",\"le fichier \"+sqlscript+\" est valide - size = \"+sqlscript.length(),LogFile)\n\n\t\t\t\t\t\t\t\/\/ Gestion des define\n\t\t\t\t\t\t\tif (flagDefines) {\n\t\t\t\t\t\t\t\tlogger(\"TRACE\",\"Ajout des defines dans le script ${sqlscript}\")\n\t\t\t\t\t\t\t\t(new AntBuilder()).copy (file : workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir+File.separator+\"defVar.${oraRpl}\", tofile : workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir+File.separator+\"defVar.${oraRpl}.tmp\")\n\n\t\t\t\t\t\t\t\tdef ant = new AntBuilder()\n\t\t\t\t\t\t\t\tant.concat(destfile:workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir+File.separator+\"defVar.${oraRpl}.tmp\", append:\"yes\") {\n\t\t\t\t\t\t\t\t\tfilelist(dir:workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir, files:sqlscript) {\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\tnew File(workDir+File.separator+\"${SBM_Folder}\"+File.separator+subdir+File.separator+\"defVar.${oraRpl}.tmp\").renameTo(\"${sqlscript}\") \n\t\t\t\t\t\t\t\tlogger(\"INFO\",\"Succes des ajouts des defines dans le script ${sqlscript}\")\n\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\n                            logger(\"TRACE\",\"scan du contenu de \"+sqlscript)\n                            def String scriptContent=sqlscript.text\n                            scriptContent.eachLine { scriptit->\n                                def String scriptline=scriptit.trim()\n\t\t\t\t\t\t\t\tdef boolean nomatches=false\n                                if(scriptline.matches(\"(?i).*NOVALIDATE.*\")){\n                                                         logger(\"TRACE\",\"NOVALIDATE PRESENT DANS \"+sqlscript)\n                                                         logger(\"WARN\",\"ATTENTION: Contacter le demandeur pour validation à l'issue du déploiement\",LogFile)\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t nomatches=true\n\n                                }\n                                if(scriptline.matches(\"(?i).*NOROLLBACK.*\")){\n                                                         logger(\"TRACE\",\"NOROLLBACK PRESENT DANS \"+sqlscript)\n                                                         logger(\"WARN\",\"ATTENTION: Sauvegarde de la base à faire. Pas de script de retour arrière\",LogFile)\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t nomatches=true\n\n                                }\n\t\t\t\t\t\t\t\tif (nomatches==true){\n\t\t\t\t\t\t\t\t\t\t\t\t\t  \tlogger(\"INFO\",\"le script ne contient ni 'norollback' ni 'novalidate'\",LogFile)\n\n\t\t\t\t\t\t\t\t}\n\n\n                            }\n                    }\n\n             }\n                     else {\n            logger(\"ERROR\",\"le fichier \"+sqlscript+\" n'existe pas\",LogFile)\n                           System.exit(1)\n             }\n          }\n\n       }\n}\n\n\n\nlogger(\"INFO\",\"Vérification des éléments de configuration\",LogFile) \nlogger(\"TRACE\",\"Le livrable sera envoyé sur l'instance ${SBM_ORA_SID}  en tant que ${SBM_ORA_Login}\")\n\n\/\/ on definit le separator avant la partie SQLPLUS pour eviter les bugs\ndef sep=File.separator\n\n\/\/ Calcul des var environnement\ndef Map env=System.getenv()\ndef  envp=[]\nenv.each{ key,val->\n    if( !(key==\"ORACLE_BASE\" ||key==\"ORACLE_SID\"||key==\"ORACLE_BASE\"||key==\"ORACLE_HOME\"|| key==\"PATH\"||key==\"LD_LIBRARY_PATH\" )) {\n             envp.add(\"$key=${val}\")\n    }\n}\n\/\/ ajout des var environement specifique Oracle\nenvp.add(\"ORACLE_BASE=${SBM_ORA_Base}\")\nenvp.add(\"ORACLE_SID=${SBM_ORA_SID}\")\nenvp.add(\"ORACLE_HOME=${SBM_ORA_Home}\")\nenvp.add(\"PATH=${SBM_ORA_Path}\")\nenvp.add(\"LD_LIBRARY_PATH=${SBM_ORA_Lib}\")\n\nlogger(\"TRACE\",\"chargement de l'environnement et execution du tnsping \")\ntry{\n       def command = \"${SBM_Script}; tnsping ${SBM_ORA_SID}\"\/\/ Create the String\n\t\tlogger(\"TRACE\",\"cmd: \"+command)\n       def value=execute_oracle_sql(envp,command)\n       logger(\"TRACE\",\"value=$value\")\n       logger(\"TRACE\",\"return code: ${value}\")\n       if(value==0){\n\t\t\tlogger(\"TRACE\",\"la configuration du serveur intermédiaire est valide - TNSPING SUCCESSFUL\")\n\t}\n\telse{\n\t\t  logger(\"ERROR\",\"ATTENTION: PB dans la configuration du serveur intermédiaire - echec TNSPING\",LogFile)\n\t\t  System.exit(1)\n\t}\n}\ncatch (Exception e){\n\tlogger(\"ERROR\",e.getMessage(),LogFile)\n\tSystem.exit(1)\n\t\t  }\n\ndef File testDir=new File(\"${workDir}\"+File.separator+\"${SBM_Folder}\"+File.separator+\"tmp\")\nif(!testDir.isDirectory()){\n\tif(!testDir.mkdirs()){\n\t\tlogger(\"ERROR\",\"Impossible de creer le repertoire \"+testDir.getAbsolutePath(),LogFile)\n\t\tSystem.exit(1)\n\t}\n\tlogger(\"TRACE\",\"dossier deja existant : \"+testDir.getAbsolutePath())\n}\nlogger(\"TRACE\",\"creation de $testDir ok\") \nlogger(\"TRACE\",\"creation de \"+workDir+File.separator+\"${SBM_Folder}\"+File.separator+\"tmp\"+File.separator+\"01-test-connexion.sql\")\ndef String testScript= \"${workDir}\"+File.separator+\"${SBM_Folder}\"+File.separator+\"tmp\"+File.separator+\"01-test-connexion.sql\"\nboolean success = new File(testScript).createNewFile() \nlogger(\"TRACE\",\"creation de \"+testScript+\" terminée\") \nlogger(\"TRACE\",\"ecriture de '\"+cmdLine+\"' dans \"+testScript) \nnew File(testScript).write(cmdLine) \nlogger(\"TRACE\",\"ecriture de '\"+testScript+\"' ok\")\n\n\ntry{\n\tlogger(\"TRACE\",\"execution du script 01-test-connexion.sql\")\n\tdef command = \"${SBM_Script}; echo ''| sqlplus ${SBM_ORA_Login}\/${SBM_ORA_Password}@${SBM_ORA_SID} @${workDir}${sep}${SBM_Folder}${sep}tmp${sep}01-test-connexion.sql 1> ${SqlLogDir}${sep}01-test-connexion.res 2>> ${LogFile}\"\/\/ Create the String\n\t\t\t\/\/ calcul du path du script execute pour deplacement dans la methode - le script peut contenir des include en path relatif\n\t\t\tdef File SqlWrkDir=sqlscript.getParentFile()\n       def value=execute_oracle_sql(envp,command,SqlWrkDir)\n       logger(\"TRACE\",\"value=$value\")\n       logger(\"TRACE\",\"return code: ${value}\")\n       if(value==0){\n               logger(\"TRACE\",\"Test de connexion successful\")\n       }\n       else{\n             logger(\"ERROR\",\"Echec du test de connexion\",LogFile)\n             System.exit(1)\n       }\n}\ncatch (Exception e){\n       logger(\"ERROR\",e.getMessage(),LogFile)\n       System.exit(1)\n}\n\nSystem.exit(0)\n\/\/ ------------ fin step PrepDeploy"
+                                },
+                                "type": "plugin",
+                                "name": "PrepDeploy",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "SQL_LOG",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Folder",
+                            "label": "SBM_Folder",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "b25ed8b5c94bb92aa98cefa21c4807",
+                                "from": "Check & Compress SqlLogDir",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "Check & Compress SqlLogDir",
+                                "type": "ALWAYS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "Check & Compress SqlLogDir",
+                                "x": 16,
+                                "y": 166
+                            },
+                            {
+                                "name": "b25ed8b5c94bb92aa98cefa21c4807",
+                                "x": 0,
+                                "y": 420
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "b25ed8b5c94bb92aa98cefa21c4807",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "Check & Compress SqlLogDir",
+                                "width": 260,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "c3719f62-b263-43a8-9a07-733a3bccdee9",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "b25ed8b5c94bb92aa98cefa21c4807",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "Run Groovy Advance Script",
+                                "pluginName": "GroovyAdvance",
+                                "pluginVersion": 2,
+                                "properties": {
+                                    "externalLibJARList": "",
+                                    "externalDirList": "",
+                                    "scriptBody": "${p:lib_groovy}\n\/\/ workDir\ndef String workDir=\"${p:SBM_Depot}\"+File.separator+\"${p:SBM_Projet}\"+File.separator+\"${p:SBM_BaselineId}\"\n\/\/ Logfile\ndef File SqlLogDir=new File(workDir+File.separator+\"${p:SBM_Folder}\"+File.separator+\"log\")\ndef String SqlLogZip=workDir+File.separator+\"log\"+File.separator+\"${p:SBM_Nom_Log}\"\n\n\nif(SqlLogDir.isDirectory()){\n\tString[] files = SqlLogDir.list();\n\tif(files.length > 0) {\n\n\t\t\/\/ Generation d'un package de backup\n\t\tlogger(\"INFO\",\"\\n------------\\nGeneration d'un package avec les logs SQL : ${p:SBM_Nom_Log}.zip\\n------------\\n\")\n\t\tdef String zipName=\"${SqlLogZip}.zip\"\n\t\tdef String basedir=\"${SqlLogDir}\"\n\t\ttry {\n\t\t\tant = new AntBuilder()\n\t\t\tant.zip(destfile: zipName, basedir:basedir)\n\t\t}\n\t\tcatch (Exception e) {\n\t\t\tlogger(\"ERROR\", \"Error durant la creation du package avec les logs SQL : ${p:SBM_Nom_Log}.zip:\\n ${e.message}\",\"$VAR_DSTAGE_LogFileName\")\n\t\t\tSystem.exit(1)\n\t\t}\n\t}\n\telse {\n\t\tlogger(\"INFO\",\"\\n------------\\nLe dossier \"+SqlLogDir+\" est vide\\n------------\\n\")\nSystem.exit(1)\n\t}\n}\nelse {\n\tlogger(\"INFO\",\"\\n------------\\nLe dossier \"+SqlLogDir+\" n existe pas\\n------------\\n\")\nSystem.exit(1)\n}\nSystem.exit(0)\n"
+                                },
+                                "type": "plugin",
+                                "name": "Check & Compress SqlLogDir",
+                                "children": []
+                            }
+                        ]
+                    }
+                }
+            ],
+            "taskDefs": [],
+            "configTemplates": []
+        },
+        {
+            "entityType": "Component",
+            "name": "SBM_LOGS",
+            "created": 1395933002869,
+            "importAutomatically": false,
+            "useVfs": true,
+            "active": true,
+            "deleted": false,
+            "defaultVersionType": "FULL",
+            "cleanupDaysToKeep": 0,
+            "cleanupCountToKeep": 0,
+            "envPropDefs": [
+                {
+                    "name": "Cst_DIM_SSHHost",
+                    "label": "Cst_DIM_SSHHost",
+                    "type": "TEXT",
+                    "value": "lr2te614.groupe.generali.fr",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHPort",
+                    "label": "Cst_DIM_SSHPort",
+                    "type": "TEXT",
+                    "value": "22",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHUser",
+                    "label": "Cst_DIM_SSHUser",
+                    "type": "TEXT",
+                    "value": "dmsys",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHPassword",
+                    "label": "Cst_DIM_SSHPassword",
+                    "type": "TEXT",
+                    "value": "dmsys",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHPrivateKey",
+                    "label": "Cst_DIM_SSHPrivateKey",
+                    "type": "TEXT",
+                    "value": "~\/.ssh\/id_rsa",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHPassPhrase",
+                    "label": "Cst_DIM_SSHPassPhrase",
+                    "type": "TEXT",
+                    "value": " ",
+                    "required": false,
+                    "description": ""
+                },
+                {
+                    "name": "Cst_DIM_SSHTrust",
+                    "label": "Cst_DIM_SSHTrust",
+                    "type": "CHECKBOX",
+                    "value": "true",
+                    "required": true,
+                    "description": ""
+                }
+            ],
+            "versionPropDefs": [],
+            "propSheetGroup": {"propSheets": [
+                {
+                    "name": "code_station",
+                    "properties": [{
+                        "name": "repository",
+                        "value": "83d40597-352b-47f3-b308-715a73c58f93",
+                        "description": "",
+                        "secure": false
+                    }]
+                },
+                {
+                    "name": "template",
+                    "properties": []
+                },
+                {
+                    "name": "custom",
+                    "properties": [
+                        {
+                            "name": "Cst_Agent_Pwd",
+                            "value": "deploy",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_Agent_User",
+                            "value": "deploy",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_SBM_LogDir",
+                            "value": "D:\\\\\\\\products\\\\\\\\LOG_NOLIO\\\\\\\\",
+                            "description": "",
+                            "secure": false
+                        }
+                    ]
+                }
+            ]},
+            "processes": [
+                {
+                    "name": "DOLLARU_LOGS",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Server",
+                            "label": "SBM_Server",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Login",
+                            "label": "SBM_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Password",
+                            "label": "SBM_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "TransfertLog",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "70f775e4bd8de0d86b5be902f6f89e",
+                                "from": "TransfertLog",
+                                "type": "SUCCESS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "70f775e4bd8de0d86b5be902f6f89e",
+                                "x": 0,
+                                "y": 420
+                            },
+                            {
+                                "name": "TransfertLog",
+                                "x": -53,
+                                "y": 199
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "70f775e4bd8de0d86b5be902f6f89e",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "TransfertLog",
+                                "width": 310,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "0628afd3-c940-4da2-9816-2febab67c491",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "70f775e4bd8de0d86b5be902f6f89e",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "deploy",
+                                    "sshPassword": "pbe{D2q3WTNyq2jdV0BNOXZ2dTv+HZ+z48dq}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{mGN7baFeGnFIV3x0dkogbRP8xv5g4rEx}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "true",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:SBM_Depot}\/${p:SBM_BaselineId}\/log\/${p:SBM_Nom_Log}",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}"
+                                },
+                                "type": "plugin",
+                                "name": "TransfertLog",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "DSTAGE_LOGS",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [{
+                        "name": "SBM_Nom_Log",
+                        "label": "SBM_Nom_Log",
+                        "type": "TEXT",
+                        "required": true,
+                        "description": ""
+                    }],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "b196e0505dba33b0dfe3ae2dbfea8c",
+                                "from": "Log Transfert Unix to LogNolio",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "Log Transfert Unix to LogNolio",
+                                "type": "ALWAYS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "b196e0505dba33b0dfe3ae2dbfea8c",
+                                "x": 0,
+                                "y": 430
+                            },
+                            {
+                                "name": "Log Transfert Unix to LogNolio",
+                                "x": -120,
+                                "y": 180
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "b196e0505dba33b0dfe3ae2dbfea8c",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "Log Transfert Unix to LogNolio",
+                                "width": 310,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "df37a9df-de81-476f-94ff-9032b00a49c9",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "b196e0505dba33b0dfe3ae2dbfea8c",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:environment\/Cst_DIM_SSHHost}",
+                                    "sshPort": "${p:environment\/Cst_DIM_SSHPort}",
+                                    "sshUser": "${p:component\/Cst_Agent_User}",
+                                    "sshPassword": "pbe{MWL0Thx21EqBcDF6cFUnS0NfoCOJrTWosGJtki+Fh6uzhiOsi6MGHbELqjLawgli}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{m1WnSa5LCF+5X+RwV2e\/VsqCE\/sMQCdP}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "false",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "\/tmp\/${p:SBM_Nom_Log}",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}"
+                                },
+                                "type": "plugin",
+                                "name": "Log Transfert Unix to LogNolio",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "DSTAGE_LOGS_BCK",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [{
+                        "name": "SBM_BckPackage",
+                        "label": "SBM_BckPackage",
+                        "type": "TEXT",
+                        "required": true,
+                        "description": ""
+                    }],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "Transfert BCK to LogNolio",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "b196e0505dba33b0dfe3ae2dbfea8c",
+                                "from": "Transfert BCK to LogNolio",
+                                "type": "SUCCESS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "b196e0505dba33b0dfe3ae2dbfea8c",
+                                "x": 0,
+                                "y": 430
+                            },
+                            {
+                                "name": "Transfert BCK to LogNolio",
+                                "x": -120,
+                                "y": 290
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "b196e0505dba33b0dfe3ae2dbfea8c",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "Transfert BCK to LogNolio",
+                                "width": 310,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "e4ed5ecc-18ef-45c2-a057-4ed4390e4580",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "b196e0505dba33b0dfe3ae2dbfea8c",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:environment\/Cst_DIM_SSHHost}",
+                                    "sshPort": "${p:environment\/Cst_DIM_SSHPort}",
+                                    "sshUser": "${p:component\/Cst_Agent_User}",
+                                    "sshPassword": "pbe{CWFZVQpfMGOAVeNdZ2ssebahZbSAEwpQa5wM2j91a0om1Jsb0RKh7IpBRycFt583}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{T10\/XL1z7WH3acxee2\/tZaioDTSYkETZ}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "false",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "\/tmp\/${p:SBM_BckPackage}.zip",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_BckPackage}.zip"
+                                },
+                                "type": "plugin",
+                                "name": "Transfert BCK to LogNolio",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "EAIV8_LOGS",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Login",
+                            "label": "SBM_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Server",
+                            "label": "SBM_Server",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Password",
+                            "label": "SBM_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "EAI_TempBaseDir",
+                            "label": "EAI_TempBaseDir",
+                            "type": "TEXT",
+                            "value": "\/tmp\/serena",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "RemoveLog",
+                                "from": "GetLogFile",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "GetReportFromEAIV8",
+                                "from": "GetReportName",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "RemoveLog",
+                                "from": "GetReportFromEAIV8",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "GetReportName",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "be1abfb5a8aa5c6399ee624490c78a",
+                                "from": "RemoveLog",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "GetLogFile",
+                                "type": "ALWAYS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "be1abfb5a8aa5c6399ee624490c78a",
+                                "x": 0,
+                                "y": 650
+                            },
+                            {
+                                "name": "GetReportFromEAIV8",
+                                "x": 150,
+                                "y": 360
+                            },
+                            {
+                                "name": "GetLogFile",
+                                "x": -370.5,
+                                "y": 160
+                            },
+                            {
+                                "name": "RemoveLog",
+                                "x": -100,
+                                "y": 540
+                            },
+                            {
+                                "name": "GetReportName",
+                                "x": 180,
+                                "y": 210
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "RemoveLog",
+                                "width": 280,
+                                "height": 60
+                            },
+                            {
+                                "name": "GetLogFile",
+                                "width": 310,
+                                "height": 60
+                            },
+                            {
+                                "name": "GetReportName",
+                                "width": 280,
+                                "height": 60
+                            },
+                            {
+                                "name": "GetReportFromEAIV8",
+                                "width": 310,
+                                "height": 60
+                            },
+                            {
+                                "name": "be1abfb5a8aa5c6399ee624490c78a",
+                                "width": 80,
+                                "height": 50
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "3b4e6773-8a89-4b4a-b838-af057c34eb4a",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "be1abfb5a8aa5c6399ee624490c78a",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:SBM_Login}",
+                                    "sshPassword": "pbe{Qmv6T851vmKcStNUSnG6c5hsk5BfiH4l8thHQOnxvwYA\/yczJR0kNQ==}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{k03BcnJSZFQZd6xm72\/qd4TxA2mDdBVO}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "false",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:EAI_TempBaseDir}\/${p:SBM_Nom_Log}",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}"
+                                },
+                                "type": "plugin",
+                                "name": "GetLogFile",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "postProcessingScript": "a3ce6558-98b7-4202-b3db-76af3558be94",
+                                "commandName": "SSH-RemoteCmdLineExecution",
+                                "pluginName": "SSH",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:SBM_Login}",
+                                    "sshPassword": "pbe{v18advxtd0keWrdRv04yS0MnOIcp5hXyy3Us4t5\/j90rYen+OvP+pA==}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{13dDY9twnXD5T9J61FG8eBClOY0MfZRZ}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshTimeout": "0",
+                                    "sshUsepty": "false",
+                                    "cmdline": "LogFileName=\"${p:EAI_TempBaseDir}\/${p:SBM_Nom_Log}\"\necho \"LogFileName:${LogFileName}\"\n\n#EAI_WEBMETHOD_LOG=$(cat ${LogFileName} | awk '\/Deploy Deployment Candidate\\]\/,\/.xml\/' | grep -v 'Deploy Deployment Candidate' | grep -v 'INFO' | sed -e 's\/^.*:\/\/g' -e 's\/ \/\/g' | awk '{print $0}')\n#if [[ -z $EAI_WEBMETHOD_LOG ]] ; then  \n#\tEAI_WEBMETHOD_LOG=$(cat ${LogFileName} | awk '\/Simulate Deployment Candidate\\]\/,\/.xml\/' | grep -v 'Simulate Deployment Candidate' | grep -v 'INFO' | sed -e 's\/^.*:\/\/g' -e 's\/ \/\/g' | awk '{print $0}')\n#fi\n\nEAI_WEBMETHOD_LOG=$(grep -i '.*report.*.xml' ${LogFileName} | tr -d ' ' )\necho \"EAI_WEBMETHOD_LOG=$EAI_WEBMETHOD_LOG\"",
+                                    "sshSuccesReturnCodeStr": "0",
+                                    "sshOutput": "",
+                                    "sshAppend": "false",
+                                    "sshVerbose": "false",
+                                    "silenceMode": "false",
+                                    "optionStoreOutProp": "false"
+                                },
+                                "type": "plugin",
+                                "name": "GetReportName",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:SBM_Login}",
+                                    "sshPassword": "pbe{XV4iYehck3QqVKZdrV0PXSxBA\/hlvwssV8SERcBXAkQTLOIG32y6iQ==}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{h1vyaE9hDnEfUmhWjkvoX+ac6Im8ug2Y}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "false",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:GetReportName\/Var_EAI_WEBMETHOD_LOG}",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}.html"
+                                },
+                                "type": "plugin",
+                                "name": "GetReportFromEAIV8",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SSH-RemoteCmdLineExecution",
+                                "pluginName": "SSH",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:component\/Cst_Agent_User}",
+                                    "sshPassword": "pbe{8VVDWGBqA3ieUoVZCVXZcgVOBfSDw2MzhJYG\/OdFhRIRfterjiXW9G5X06WYRWuA}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{w0mZb5tdv26WcpVTPUqbWVJ7hVW1Yne5}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshTimeout": "0",
+                                    "sshUsepty": "false",
+                                    "cmdline": "rm  ${p:EAI_TempBaseDir}\/${p:SBM_Nom_Log} 2>\/dev\/null",
+                                    "sshSuccesReturnCodeStr": "0",
+                                    "sshOutput": "",
+                                    "sshAppend": "false",
+                                    "sshVerbose": "false",
+                                    "silenceMode": "false",
+                                    "optionStoreOutProp": "false"
+                                },
+                                "type": "plugin",
+                                "name": "RemoveLog",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "JND_LOGS",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Login",
+                            "label": "SBM_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Server",
+                            "label": "SBM_Server",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Password",
+                            "label": "SBM_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "GetLogsFromJnd",
+                                "from": "InitStep",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "2ccdb601284a1b118164565ed7a31e",
+                                "from": "GetLogsFromJnd",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "InitStep",
+                                "type": "ALWAYS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "GetLogsFromJnd",
+                                "x": -97.5,
+                                "y": 300
+                            },
+                            {
+                                "name": "InitStep",
+                                "x": -71.5,
+                                "y": 119
+                            },
+                            {
+                                "name": "2ccdb601284a1b118164565ed7a31e",
+                                "x": 0,
+                                "y": 445
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "2ccdb601284a1b118164565ed7a31e",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "InitStep",
+                                "width": 210,
+                                "height": 60
+                            },
+                            {
+                                "name": "GetLogsFromJnd",
+                                "width": 310,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "618f7107-cbc1-41f2-a636-b24b0fe04213",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "2ccdb601284a1b118164565ed7a31e",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:SBM_Login}",
+                                    "sshPassword": "pbe{kkxcW+VrMmE8cq554FSRZGeTt6q6YQ4gq+baWxtLH\/xdZaScN9P9mA==}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{fl1bdAhawXTGUn9SuE9YVE+lTx+kQGl2}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "false",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:SBM_Depot}\/${p:InitStep\/Nom_Projet}\/log\/${p:SBM_Nom_Log}",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}"
+                                },
+                                "type": "plugin",
+                                "name": "GetLogsFromJnd",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "Run Groovy Script",
+                                "pluginName": "GroovyAdvance",
+                                "pluginVersion": 2,
+                                "properties": {"scriptBody": "def myRegEx = \/(.*)-$\/\ndef String tmpSBM_Projet=\"${p:SBM_Projet}\"\nmatcher = ( tmpSBM_Projet =~ myRegEx )\nif (matcher.matches()) {\n\ttmpSBM_Projet=matcher[0][1]\n}\noutProps.setProperty(\"Nom_Projet\",\"${tmpSBM_Projet}\")\n"},
+                                "type": "plugin",
+                                "name": "InitStep",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ORA_LOGS",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Server",
+                            "label": "SBM_Server",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Login",
+                            "label": "SBM_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Password",
+                            "label": "SBM_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "Transfert Logs",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "cbc388adb1e74e19c3fb646bc720b3",
+                                "from": "Transfert Logs",
+                                "type": "SUCCESS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "Transfert Logs",
+                                "x": -265,
+                                "y": 180
+                            },
+                            {
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "x": 0,
+                                "y": 420
+                            }
+                        ],
+                        "sizes": [],
+                        "type": "graph",
+                        "name": "f8a3d03b-076c-4f7b-ab02-94c064c50866",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:SBM_Login}",
+                                    "sshPassword": "pbe{TVhiSjt1gVuEWYNNUV3mdI9pZ6X0JUUjRbireqDYQ6Ws2GeNrGIw6A==}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{i0ynWIxrG3htT2Vv\/Ul1ZOhjm\/oy6nwc}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "false",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:SBM_Depot}\/${p:SBM_Projet}\/${p:SBM_BaselineId}\/log\/${p:SBM_Nom_Log}",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}"
+                                },
+                                "type": "plugin",
+                                "name": "Transfert Logs",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ORA_LOGS_SQL",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Server",
+                            "label": "SBM_Server",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Login",
+                            "label": "SBM_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Password",
+                            "label": "SBM_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "cbc388adb1e74e19c3fb646bc720b3",
+                                "from": "Transfert Logs",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "Transfert Logs",
+                                "type": "ALWAYS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "x": 0,
+                                "y": 420
+                            },
+                            {
+                                "name": "Transfert Logs",
+                                "x": -265,
+                                "y": 180
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "Transfert Logs",
+                                "width": 310,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "db00e652-0e05-4a8e-bdb2-9a539f8a52d2",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:SBM_Login}",
+                                    "sshPassword": "pbe{nGjsTsRTGk4rYK9ZKVqcaPuI1SrjTwNvI4bQVRos2eBUy3J2NtvxAg==}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{6VhuWHdp304LVuF01nWPYGOEEeGI9uBD}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "false",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:SBM_Depot}\/${p:SBM_Projet}\/${p:SBM_BaselineId}\/log\/${p:SBM_Nom_Log}.zip",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}.zip"
+                                },
+                                "type": "plugin",
+                                "name": "Transfert Logs",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "SYB_LOGS",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Server",
+                            "label": "SBM_Server",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Login",
+                            "label": "SBM_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Password",
+                            "label": "SBM_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SybLogFileName",
+                            "label": "SybLogFileName",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "Transfert Logs",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "cbc388adb1e74e19c3fb646bc720b3",
+                                "from": "Transfert Logs",
+                                "type": "SUCCESS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "x": 0,
+                                "y": 420
+                            },
+                            {
+                                "name": "Transfert Logs",
+                                "x": -265,
+                                "y": 180
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "Transfert Logs",
+                                "width": 310,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "c9b94cde-cfbc-47ad-bfcc-8bc813398dbc",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:SBM_Login}",
+                                    "sshPassword": "pbe{MnnxWixmzFiUWsZc\/mJZaK7ByAJ15wW\/yLaT7LbIax5+nf72ovMaxg==}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{n3YPSPJSOHX7bdB37GuYW75C+NetZOUF}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "false",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:SybLogFileName}",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}"
+                                },
+                                "type": "plugin",
+                                "name": "Transfert Logs",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "SYB_LOGS_SQL",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_Depot",
+                            "label": "SBM_Depot",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BaselineId",
+                            "label": "SBM_BaselineId",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Server",
+                            "label": "SBM_Server",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Login",
+                            "label": "SBM_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Password",
+                            "label": "SBM_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SybLogFileName",
+                            "label": "SybLogFileName",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "Transfert Logs",
+                                "type": "ALWAYS",
+                                "value": ""
+                            },
+                            {
+                                "to": "cbc388adb1e74e19c3fb646bc720b3",
+                                "from": "Transfert Logs",
+                                "type": "SUCCESS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "Transfert Logs",
+                                "x": -265,
+                                "y": 180
+                            },
+                            {
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "x": 0,
+                                "y": 420
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "Transfert Logs",
+                                "width": 310,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "3ced2c08-16d0-4d41-b762-4f7ee1e93585",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "cbc388adb1e74e19c3fb646bc720b3",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_Server}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:SBM_Login}",
+                                    "sshPassword": "pbe{dGg\/cP5JsHVpZede\/1Vdci1H2MpWuMG\/CvggugoP0HozVusDSjwNQQ==}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{KEziavlRZVyGYoN3olFKTOYzF7CoOq\/z}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "false",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:SybLogFileName}",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}.zip"
+                                },
+                                "type": "plugin",
+                                "name": "Transfert Logs",
+                                "children": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "WSTOOLS_LOGS",
+                    "description": "",
+                    "defaultWorkingDir": "${p:resource\/work.dir}\/${p:component.name}",
+                    "takesVersion": false,
+                    "status": "",
+                    "active": true,
+                    "propDefs": [
+                        {
+                            "name": "SBM_BATCH_RemoteServer",
+                            "label": "SBM_BATCH_RemoteServer",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BATCH_Login",
+                            "label": "SBM_BATCH_Login",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_BATCH_Password",
+                            "label": "SBM_BATCH_Password",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Projet",
+                            "label": "SBM_Projet",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        },
+                        {
+                            "name": "SBM_Nom_Log",
+                            "label": "SBM_Nom_Log",
+                            "type": "TEXT",
+                            "required": true,
+                            "description": ""
+                        }
+                    ],
+                    "rootActivity": {
+                        "edges": [
+                            {
+                                "to": "ef05e3d27b0b003bcb10aac3083df5",
+                                "from": "TransfertLog",
+                                "type": "SUCCESS",
+                                "value": ""
+                            },
+                            {
+                                "to": "TransfertLog",
+                                "type": "ALWAYS",
+                                "value": ""
+                            }
+                        ],
+                        "offsets": [
+                            {
+                                "name": "TransfertLog",
+                                "x": -22,
+                                "y": 192
+                            },
+                            {
+                                "name": "ef05e3d27b0b003bcb10aac3083df5",
+                                "x": 0,
+                                "y": 420
+                            }
+                        ],
+                        "sizes": [
+                            {
+                                "name": "ef05e3d27b0b003bcb10aac3083df5",
+                                "width": 80,
+                                "height": 50
+                            },
+                            {
+                                "name": "TransfertLog",
+                                "width": 310,
+                                "height": 60
+                            }
+                        ],
+                        "type": "graph",
+                        "name": "edd5fc4b-eb64-4dc3-8416-16e11f1fadeb",
+                        "children": [
+                            {
+                                "type": "finish",
+                                "name": "ef05e3d27b0b003bcb10aac3083df5",
+                                "children": []
+                            },
+                            {
+                                "allowFailure": false,
+                                "useImpersonation": false,
+                                "showHidden": false,
+                                "impersonationUseSudo": false,
+                                "impersonationUseSsh": false,
+                                "commandName": "SCP-GetOneFileFromRemoteDirectory",
+                                "pluginName": "SCP",
+                                "pluginVersion": 1,
+                                "properties": {
+                                    "sshHost": "${p:SBM_BATCH_RemoteServer}",
+                                    "sshPort": "22",
+                                    "sshUser": "${p:SBM_BATCH_Login}",
+                                    "sshPassword": "pbe{i2YkSp1tzUoGaK1dvF56diXyz2wnId+ZpH8EnpO0Qk6HW1F4Elkj9w==}",
+                                    "sshKeyfile": "",
+                                    "sshPassphrase": "pbe{YHN5bNxN8m6RYi1aSG+ReJo8xJj6ckYQ}",
+                                    "sshTrust": "true",
+                                    "sshKnownhosts": "",
+                                    "sshVerbose": "true",
+                                    "sshSftp": "false",
+                                    "sshPreserveLastModified": "false",
+                                    "remoteSrcFile": "${p:SBM_BATCH_BatchRoot}\/${p:SBM_Projet}\/log\/${p:SBM_Nom_Log}",
+                                    "localDestFile": "${p:component\/Cst_SBM_LogDir}\\\\${p:SBM_Nom_Log}"
+                                },
+                                "type": "plugin",
+                                "name": "TransfertLog",
+                                "children": []
+                            }
+                        ]
+                    }
+                }
+            ],
+            "taskDefs": [],
+            "configTemplates": []
+        }
+    ],
+    "environments": [
+        {
+            "name": "ORA-REC",
+            "color": "#da70d6",
+            "requireApprovals": false,
+            "cleanupDaysToKeep": 0,
+            "cleanupCountToKeep": 0,
+            "order": 2,
+            "active": true,
+            "propSheet": {"properties": []},
+            "componentEnvironmentMappings": [
+                {
+                    "componentName": "SBM_LOGS",
+                    "resource": "dsi-w2358appv0"
+                },
+                {
+                    "componentName": "ORACLE",
+                    "resource": "lb2te726v"
+                }
+            ],
+            "componentPropSheets": [
+                {
+                    "properties": [
+                        {
+                            "name": "Cst_DIM_Depot",
+                            "value": "\/products\/serena\/depot\/ORACLE\/${p:SBM_Folder}",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SASDepot",
+                            "value": "\/products\/serena\/sas",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHHost",
+                            "value": "lr2te614.groupe.generali.fr",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassPhrase",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassword",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPort",
+                            "value": "22",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPrivateKey",
+                            "value": "~\/.ssh\/id_rsa",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHTrust",
+                            "value": "true",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHUser",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        }
+                    ],
+                    "componentName": "ORACLE"
+                },
+                {
+                    "properties": [
+                        {
+                            "name": "Cst_DIM_SSHHost",
+                            "value": "lr2te614.groupe.generali.fr",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassPhrase",
+                            "value": " ",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassword",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPort",
+                            "value": "22",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPrivateKey",
+                            "value": "~\/.ssh\/id_rsa",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHTrust",
+                            "value": "true",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHUser",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        }
+                    ],
+                    "componentName": "SBM_LOGS"
+                }
+            ]
+        },
+        {
+            "name": "ORA-PPROD",
+            "color": "#9932cc",
+            "requireApprovals": false,
+            "cleanupDaysToKeep": 0,
+            "cleanupCountToKeep": 0,
+            "order": 3,
+            "active": true,
+            "propSheet": {"properties": []},
+            "componentEnvironmentMappings": [
+                {
+                    "componentName": "ORACLE",
+                    "resource": "lb2te726v"
+                },
+                {
+                    "componentName": "SBM_LOGS",
+                    "resource": "dsi-w2358appv0"
+                }
+            ],
+            "componentPropSheets": [
+                {
+                    "properties": [
+                        {
+                            "name": "Cst_DIM_Depot",
+                            "value": "\/products\/serena\/depot\/ORACLE\/${p:SBM_Folder}",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SASDepot",
+                            "value": "\/products\/serena\/sas",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHHost",
+                            "value": "lr2te614.groupe.generali.fr",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassPhrase",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassword",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPort",
+                            "value": "22",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPrivateKey",
+                            "value": "~\/.ssh\/id_rsa",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHTrust",
+                            "value": "true",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHUser",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        }
+                    ],
+                    "componentName": "ORACLE"
+                },
+                {
+                    "properties": [
+                        {
+                            "name": "Cst_DIM_SSHHost",
+                            "value": "lr2te614.groupe.generali.fr",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassPhrase",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassword",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPort",
+                            "value": "22",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPrivateKey",
+                            "value": "~\/.ssh\/id_rsa",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHTrust",
+                            "value": "true",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHUser",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        }
+                    ],
+                    "componentName": "SBM_LOGS"
+                }
+            ]
+        },
+        {
+            "name": "ORA-PROD",
+            "color": "#800080",
+            "requireApprovals": false,
+            "cleanupDaysToKeep": 0,
+            "cleanupCountToKeep": 0,
+            "order": 4,
+            "active": true,
+            "propSheet": {"properties": []},
+            "componentEnvironmentMappings": [
+                {
+                    "componentName": "ORACLE",
+                    "resource": "lb2te726v"
+                },
+                {
+                    "componentName": "SBM_LOGS",
+                    "resource": "dsi-w2358appv0"
+                }
+            ],
+            "componentPropSheets": [
+                {
+                    "properties": [
+                        {
+                            "name": "Cst_DIM_Depot",
+                            "value": "\/products\/serena\/depot\/ORACLE\/${p:SBM_Folder}",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SASDepot",
+                            "value": "\/products\/serena\/sas",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHHost",
+                            "value": "lr2te614.groupe.generali.fr",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassPhrase",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassword",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPort",
+                            "value": "22",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPrivateKey",
+                            "value": "~\/.ssh\/id_rsa",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHTrust",
+                            "value": "true",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHUser",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        }
+                    ],
+                    "componentName": "ORACLE"
+                },
+                {
+                    "properties": [
+                        {
+                            "name": "Cst_DIM_SSHHost",
+                            "value": "lr2te614.groupe.generali.fr",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassPhrase",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPassword",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPort",
+                            "value": "22",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHPrivateKey",
+                            "value": "~\/.ssh\/id_rsa",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHTrust",
+                            "value": "true",
+                            "description": "",
+                            "secure": false
+                        },
+                        {
+                            "name": "Cst_DIM_SSHUser",
+                            "value": "dmsys",
+                            "description": "",
+                            "secure": false
+                        }
+                    ],
+                    "componentName": "SBM_LOGS"
+                }
+            ]
+        }
+    ],
+    "processes": [
+        {
+            "name": "DEPLOY_BACKUP",
+            "description": "",
+            "inventoryManagementType": "AUTOMATIC",
+            "offlineAgentHandling": "PRE_EXECUTION_CHECK",
+            "rootActivity": {
+                "edges": [
+                    {
+                        "to": "3347637fe65257bcf99e053c42dbe8",
+                        "from": "d7c9ff7b8874de36a4a1eff0ad197c",
+                        "type": "SUCCESS",
+                        "value": ""
+                    },
+                    {
+                        "to": "d7c9ff7b8874de36a4a1eff0ad197c",
+                        "type": "ALWAYS",
+                        "value": ""
+                    }
+                ],
+                "offsets": [
+                    {
+                        "name": "d7c9ff7b8874de36a4a1eff0ad197c",
+                        "x": 22.5,
+                        "y": 152
+                    },
+                    {
+                        "name": "3347637fe65257bcf99e053c42dbe8",
+                        "x": 0,
+                        "y": 420
+                    }
+                ],
+                "sizes": [],
+                "type": "graph",
+                "name": "451fb623-26fb-41a0-a148-ff63666e0439",
+                "children": [
+                    {
+                        "type": "finish",
+                        "name": "3347637fe65257bcf99e053c42dbe8",
+                        "children": []
+                    },
+                    {
+                        "componentName": "ORACLE",
+                        "properties": [
+                            {
+                                "name": "runOnlyOnFirst",
+                                "value": "false"
+                            },
+                            {
+                                "name": "failFast",
+                                "value": "false"
+                            },
+                            {
+                                "name": "maxIteration",
+                                "value": "-1"
+                            }
+                        ],
+                        "type": "componentEnvironmentIterator",
+                        "name": "d7c9ff7b8874de36a4a1eff0ad197c",
+                        "children": [{
+                            "componentName": "ORACLE",
+                            "componentProcessName": "DEPLOY_BACKUP",
+                            "allowFailure": false,
+                            "properties": {
+                                "SBM_ORA_Login": "${p:SBM_ORA_Login}",
+                                "SBM_ORA_Lib": "${p:SBM_ORA_Lib}",
+                                "SBM_BaselineId": "${p:SBM_BaselineId}",
+                                "SBM_Folder": "${p:SBM_Folder}",
+                                "SBM_Nom_Log": "${p:SBM_Nom_Log}",
+                                "SBM_Environnement": "${p:SBM_Environnement}",
+                                "SBM_ORA_Path": "${p:SBM_ORA_Path}",
+                                "SBM_ORA_Password": "${p:SBM_ORA_Password}",
+                                "SBM_ORA_Base": "${p:SBM_ORA_Base}",
+                                "SBM_ORA_SID": "${p:SBM_ORA_SID}",
+                                "SBM_ORA_Home": "${p:SBM_ORA_Home}",
+                                "SBM_Depot": "${p:SBM_Depot}",
+                                "SBM_Projet": "${p:SBM_Projet}",
+                                "SBM_Script": "${p:SBM_Script}",
+                                "SBM_Package": "${p:SBM_Package}"
+                            },
+                            "type": "componentProcess",
+                            "name": "DeployBackup",
+                            "children": []
+                        }]
+                    }
+                ]
+            },
+            "propDefs": [
+                {
+                    "name": "SBM_Depot",
+                    "label": "SBM_Depot",
+                    "type": "TEXT",
+                    "value": "\/app\/serena",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Projet",
+                    "label": "SBM_Projet",
+                    "type": "TEXT",
+                    "value": "SOCLEEAI",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_BaselineId",
+                    "label": "SBM_BaselineId",
+                    "type": "TEXT",
+                    "value": "BL_nomprojet_dhms",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Nom_Log",
+                    "label": "SBM_Nom_Log",
+                    "type": "TEXT",
+                    "value": "BL_nomprojet_dhms.txt",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Folder",
+                    "label": "SBM_Folder",
+                    "type": "TEXT",
+                    "value": "SOCLEEAI",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Login",
+                    "label": "SBM_ORA_Login",
+                    "type": "TEXT",
+                    "value": "UEAIGNID0",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Password",
+                    "label": "SBM_ORA_Password",
+                    "type": "TEXT",
+                    "value": "UEAIGNID9",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_SID",
+                    "label": "SBM_ORA_SID",
+                    "type": "TEXT",
+                    "value": "INSEAID0",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Base",
+                    "label": "SBM_ORA_Base",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Home",
+                    "label": "SBM_ORA_Home",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle\/client\/11.2.0.3",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Path",
+                    "label": "SBM_ORA_Path",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle\/client\/11.2.0.1\/bin",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Lib",
+                    "label": "SBM_ORA_Lib",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle\/client\/11.2.0.1\/lib",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Environnement",
+                    "label": "SBM_Environnement",
+                    "type": "TEXT",
+                    "value": "Recette",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Script",
+                    "label": "SBM_Script",
+                    "type": "TEXT",
+                    "value": ". \/product\/oracle\/client\/ORACLE_ENV.sh",
+                    "required": true,
+                    "description": ""
+                }
+            ]
+        },
+        {
+            "name": "PREP_DEPLOY",
+            "description": "",
+            "inventoryManagementType": "AUTOMATIC",
+            "offlineAgentHandling": "PRE_EXECUTION_CHECK",
+            "rootActivity": {
+                "edges": [
+                    {
+                        "to": "3625a0925227037052a62b64c897ee",
+                        "type": "ALWAYS",
+                        "value": ""
+                    },
+                    {
+                        "to": "e89f5099d187859b5fafd347cbe748",
+                        "from": "3625a0925227037052a62b64c897ee",
+                        "type": "SUCCESS",
+                        "value": ""
+                    }
+                ],
+                "offsets": [
+                    {
+                        "name": "3625a0925227037052a62b64c897ee",
+                        "x": 0.5,
+                        "y": 153
+                    },
+                    {
+                        "name": "e89f5099d187859b5fafd347cbe748",
+                        "x": 0,
+                        "y": 420
+                    }
+                ],
+                "sizes": [],
+                "type": "graph",
+                "name": "af33b1e7-655f-4aa8-8057-cd5ee0620b74",
+                "children": [
+                    {
+                        "type": "finish",
+                        "name": "e89f5099d187859b5fafd347cbe748",
+                        "children": []
+                    },
+                    {
+                        "componentName": "ORACLE",
+                        "properties": [
+                            {
+                                "name": "failFast",
+                                "value": "false"
+                            },
+                            {
+                                "name": "runOnlyOnFirst",
+                                "value": "false"
+                            },
+                            {
+                                "name": "maxIteration",
+                                "value": "-1"
+                            }
+                        ],
+                        "type": "componentEnvironmentIterator",
+                        "name": "3625a0925227037052a62b64c897ee",
+                        "children": [{
+                            "componentName": "ORACLE",
+                            "componentProcessName": "PREP_DEPLOY",
+                            "allowFailure": false,
+                            "properties": {
+                                "SBM_ORA_Login": "${p:SBM_ORA_Login}",
+                                "SBM_ORA_Lib": "${p:SBM_ORA_Lib}",
+                                "SBM_BaselineId": "${p:SBM_BaselineId}",
+                                "SBM_Folder": "${p:SBM_Folder}",
+                                "SBM_Nom_Log": "${p:SBM_Nom_Log}",
+                                "SBM_Environnement": "${p:SBM_Environnement}",
+                                "SBM_ORA_Path": "${p:SBM_ORA_Path}",
+                                "SBM_ORA_Password": "${p:SBM_ORA_Password}",
+                                "SBM_ORA_Base": "${p:SBM_ORA_Base}",
+                                "SBM_ORA_SID": "${p:SBM_ORA_SID}",
+                                "SBM_ORA_Home": "${p:SBM_ORA_Home}",
+                                "SBM_Depot": "${p:SBM_Depot}",
+                                "SBM_Projet": "${p:SBM_Projet}",
+                                "SBM_Script": "${p:SBM_Script}",
+                                "SBM_Package": "${p:SBM_Package}"
+                            },
+                            "type": "componentProcess",
+                            "name": "PrepDeploy",
+                            "children": []
+                        }]
+                    }
+                ]
+            },
+            "propDefs": [
+                {
+                    "name": "SBM_Package",
+                    "label": "SBM_Package",
+                    "type": "TEXT",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Depot",
+                    "label": "SBM_Depot",
+                    "type": "TEXT",
+                    "value": "\/app\/serena",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Projet",
+                    "label": "SBM_Projet",
+                    "type": "TEXT",
+                    "value": "SOCLEEAI",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_BaselineId",
+                    "label": "SBM_BaselineId",
+                    "type": "TEXT",
+                    "value": "BL_nomprojet_dhms",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Nom_Log",
+                    "label": "SBM_Nom_Log",
+                    "type": "TEXT",
+                    "value": "BL_nomprojet_dhms.txt",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Folder",
+                    "label": "SBM_Folder",
+                    "type": "TEXT",
+                    "value": "SOCLEEAI",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Login",
+                    "label": "SBM_ORA_Login",
+                    "type": "TEXT",
+                    "value": "UEAIGNID0",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Password",
+                    "label": "SBM_ORA_Password",
+                    "type": "TEXT",
+                    "value": "UEAIGNID9",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_SID",
+                    "label": "SBM_ORA_SID",
+                    "type": "TEXT",
+                    "value": "INSEAID0",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Base",
+                    "label": "SBM_ORA_Base",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Home",
+                    "label": "SBM_ORA_Home",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle\/client\/11.2.0.1",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Path",
+                    "label": "SBM_ORA_Path",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle\/client\/11.2.0.1\/bin",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Lib",
+                    "label": "SBM_ORA_Lib",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle\/client\/11.2.0.1\/lib",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Environnement",
+                    "label": "SBM_Environnement",
+                    "type": "TEXT",
+                    "value": "Recette",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Script",
+                    "label": "SBM_Script",
+                    "type": "TEXT",
+                    "value": ". \/product\/oracle\/client\/ORACLE_ENV.sh",
+                    "required": true,
+                    "description": ""
+                }
+            ]
+        },
+        {
+            "name": "DEPLOY",
+            "description": "",
+            "inventoryManagementType": "AUTOMATIC",
+            "offlineAgentHandling": "PRE_EXECUTION_CHECK",
+            "rootActivity": {
+                "edges": [
+                    {
+                        "to": "ee35fd4188c008c09c6dd654652a09",
+                        "type": "ALWAYS",
+                        "value": ""
+                    },
+                    {
+                        "to": "e89f5099d187859b5fafd347cbe748",
+                        "from": "ee35fd4188c008c09c6dd654652a09",
+                        "type": "SUCCESS",
+                        "value": ""
+                    }
+                ],
+                "offsets": [
+                    {
+                        "name": "ee35fd4188c008c09c6dd654652a09",
+                        "x": -9.5,
+                        "y": 171
+                    },
+                    {
+                        "name": "e89f5099d187859b5fafd347cbe748",
+                        "x": 0,
+                        "y": 420
+                    }
+                ],
+                "sizes": [],
+                "type": "graph",
+                "name": "6314271b-4747-490a-b4ab-89499a845869",
+                "children": [
+                    {
+                        "type": "finish",
+                        "name": "e89f5099d187859b5fafd347cbe748",
+                        "children": []
+                    },
+                    {
+                        "componentName": "ORACLE",
+                        "properties": [
+                            {
+                                "name": "failFast",
+                                "value": "false"
+                            },
+                            {
+                                "name": "runOnlyOnFirst",
+                                "value": "false"
+                            },
+                            {
+                                "name": "maxIteration",
+                                "value": "-1"
+                            }
+                        ],
+                        "type": "componentEnvironmentIterator",
+                        "name": "ee35fd4188c008c09c6dd654652a09",
+                        "children": [{
+                            "componentName": "ORACLE",
+                            "componentProcessName": "DEPLOY",
+                            "allowFailure": false,
+                            "properties": {
+                                "SBM_ORA_Login": "${p:SBM_ORA_Login}",
+                                "SBM_ORA_Lib": "${p:SBM_ORA_Lib}",
+                                "SBM_BaselineId": "${p:SBM_BaselineId}",
+                                "SBM_Folder": "${p:SBM_Folder}",
+                                "SBM_Nom_Log": "${p:SBM_Nom_Log}",
+                                "SBM_Environnement": "${p:SBM_Environnement}",
+                                "SBM_ORA_Path": "${p:SBM_ORA_Path}",
+                                "SBM_ORA_Password": "${p:SBM_ORA_Password}",
+                                "SBM_ORA_Base": "${p:SBM_ORA_Base}",
+                                "SBM_ORA_SID": "${p:SBM_ORA_SID}",
+                                "SBM_ORA_Home": "${p:SBM_ORA_Home}",
+                                "SBM_Depot": "${p:SBM_Depot}",
+                                "SBM_Projet": "${p:SBM_Projet}",
+                                "SBM_Script": "${p:SBM_Script}",
+                                "SBM_Package": "${p:SBM_Package}"
+                            },
+                            "type": "componentProcess",
+                            "name": "Deploy",
+                            "children": []
+                        }]
+                    }
+                ]
+            },
+            "propDefs": [
+                {
+                    "name": "SBM_Depot",
+                    "label": "SBM_Depot",
+                    "type": "TEXT",
+                    "value": "\/app\/serena",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Projet",
+                    "label": "SBM_Projet",
+                    "type": "TEXT",
+                    "value": "SOCLEEAI",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_BaselineId",
+                    "label": "SBM_BaselineId",
+                    "type": "TEXT",
+                    "value": "BL_nomprojet_dhms",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Nom_Log",
+                    "label": "SBM_Nom_Log",
+                    "type": "TEXT",
+                    "value": "BL_nomprojet_dhms.txt",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Folder",
+                    "label": "SBM_Folder",
+                    "type": "TEXT",
+                    "value": "SOCLEEAI",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Login",
+                    "label": "SBM_ORA_Login",
+                    "type": "TEXT",
+                    "value": "UEAIGNID0",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Password",
+                    "label": "SBM_ORA_Password",
+                    "type": "TEXT",
+                    "value": "UEAIGNID9",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_SID",
+                    "label": "SBM_ORA_SID",
+                    "type": "TEXT",
+                    "value": "INSEAID0",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Base",
+                    "label": "SBM_ORA_Base",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Home",
+                    "label": "SBM_ORA_Home",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle\/client\/11.2.0.3",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Path",
+                    "label": "SBM_ORA_Path",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle\/client\/11.2.0.1\/bin",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_ORA_Lib",
+                    "label": "SBM_ORA_Lib",
+                    "type": "TEXT",
+                    "value": "\/product\/oracle\/client\/11.2.0.1\/lib",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Environnement",
+                    "label": "SBM_Environnement",
+                    "type": "TEXT",
+                    "value": "Recette",
+                    "required": true,
+                    "description": ""
+                },
+                {
+                    "name": "SBM_Script",
+                    "label": "SBM_Script",
+                    "type": "TEXT",
+                    "value": ". \/product\/oracle\/client\/ORACLE_ENV.sh",
+                    "required": true,
+                    "description": ""
+                }
+            ]
+        },
+        {
+            "name": "LOG",
+            "description": "",
+            "inventoryManagementType": "AUTOMATIC",
+            "offlineAgentHandling": "PRE_EXECUTION_CHECK",
+            "rootActivity": {
+                "edges": [
+                    {
+                        "to": "9fa4f34670b2abbd3c3bbe2681d876",
+                        "from": "a64e3b8b16ada204398fb181f105ea",
+                        "type": "SUCCESS",
+                        "value": ""
+                    },
+                    {
+                        "to": "e6ba4e02b7ed53932d1f918274a5c3",
+                        "from": "d0667149c65388f18024ee104bdedb",
+                        "type": "FAILURE",
+                        "value": ""
+                    },
+                    {
+                        "to": "9fa4f34670b2abbd3c3bbe2681d876",
+                        "from": "e7f93e0c64b5e51f931477a34e5758",
+                        "type": "SUCCESS",
+                        "value": ""
+                    },
+                    {
+                        "to": "e7f93e0c64b5e51f931477a34e5758",
+                        "type": "ALWAYS",
+                        "value": ""
+                    },
+                    {
+                        "to": "9fa4f34670b2abbd3c3bbe2681d876",
+                        "from": "e6ba4e02b7ed53932d1f918274a5c3",
+                        "type": "SUCCESS",
+                        "value": ""
+                    },
+                    {
+                        "to": "a64e3b8b16ada204398fb181f105ea",
+                        "from": "d0667149c65388f18024ee104bdedb",
+                        "type": "SUCCESS",
+                        "value": ""
+                    },
+                    {
+                        "to": "d0667149c65388f18024ee104bdedb",
+                        "type": "ALWAYS",
+                        "value": ""
+                    }
+                ],
+                "offsets": [
+                    {
+                        "name": "d0667149c65388f18024ee104bdedb",
+                        "x": 269.5,
+                        "y": 170
+                    },
+                    {
+                        "name": "e6ba4e02b7ed53932d1f918274a5c3",
+                        "x": 19.5,
+                        "y": 450
+                    },
+                    {
+                        "name": "e7f93e0c64b5e51f931477a34e5758",
+                        "x": -290.5,
+                        "y": 70
+                    },
+                    {
+                        "name": "a64e3b8b16ada204398fb181f105ea",
+                        "x": 369.5,
+                        "y": 330
+                    },
+                    {
+                        "name": "9fa4f34670b2abbd3c3bbe2681d876",
+                        "x": 0,
+                        "y": 580
+                    }
+                ],
+                "sizes": [
+                    {
+                        "name": "d0667149c65388f18024ee104bdedb",
+                        "width": 220,
+                        "height": 60
+                    },
+                    {
+                        "name": "9fa4f34670b2abbd3c3bbe2681d876",
+                        "width": 80,
+                        "height": 50
+                    },
+                    {
+                        "name": "e7f93e0c64b5e51f931477a34e5758",
+                        "width": 160,
+                        "height": 60
+                    },
+                    {
+                        "name": "e6ba4e02b7ed53932d1f918274a5c3",
+                        "width": 180,
+                        "height": 40
+                    },
+                    {
+                        "name": "a64e3b8b16ada204398fb181f105ea",
+                        "width": 180,
+                        "height": 60
+                    }
+                ],
+                "type": "graph",
+                "name": "a299d690-f4f3-477b-8a19-fd5f37375620",
+                "children": [
+                    {
+                        "type": "finish",
+                        "name": "9fa4f34670b2abbd3c3bbe2681d876",
+                        "children": []
+                    },
+                    {
+                        "componentName": "SBM_LOGS",
+                        "properties": [
+                            {
+                                "name": "failFast",
+                                "value": "false"
+                            },
+                            {
+                                "name": "runOnlyOnFirst",
+                                "value": "false"
+                            },
+                            {
+                                "name": "maxIteration",
+                                "value": "-1"
+                            }
+                        ],
+                        "type": "componentEnvironmentIterator",
+                        "name": "e7f93e0c64b5e51f931477a34e5758",
+                        "children": [{
+                            "componentName": "SBM_LOGS",
+                            "componentProcessName": "ORA_LOGS",
+                            "allowFailure": false,
+                            "properties": {
+                                "SBM_Login": "${p:component\/Cst_Agent_User}",
+                                "SBM_Server": "${p:SBM_Server}",
+                                "SBM_BaselineId": "${p:SBM_BaselineId}",
+                                "SBM_Depot": "${p:SBM_Depot}",
+                                "SBM_Nom_Log": "${p:SBM_Nom_Log}",
+                                "SBM_Projet": "${p:SBM_Projet}",
+                                "SBM_Password": "${p:component\/Cst_Agent_Pwd}"
+                            },
+                            "type": "componentProcess",
+                            "name": "Log to LogNolio",
+                            "children": []
+                        }]
+                    },
+                    {
+                        "componentName": "SBM_LOGS",
+                        "properties": [
+                            {
+                                "name": "failFast",
+                                "value": "false"
+                            },
+                            {
+                                "name": "runOnlyOnFirst",
+                                "value": "false"
+                            },
+                            {
+                                "name": "maxIteration",
+                                "value": "-1"
+                            }
+                        ],
+                        "type": "componentEnvironmentIterator",
+                        "name": "a64e3b8b16ada204398fb181f105ea",
+                        "children": [{
+                            "componentName": "SBM_LOGS",
+                            "componentProcessName": "ORA_LOGS_SQL",
+                            "allowFailure": false,
+                            "properties": {
+                                "SBM_Login": "${p:component\/Cst_Agent_User}",
+                                "SBM_Server": "${p:SBM_Server}",
+                                "SBM_BaselineId": "${p:SBM_BaselineId}",
+                                "SBM_Depot": "${p:SBM_Depot}",
+                                "SBM_Nom_Log": "${p:SBM_Nom_Log}",
+                                "SBM_Projet": "${p:SBM_Projet}",
+                                "SBM_Password": "${p:component\/Cst_Agent_Pwd}"
+                            },
+                            "type": "componentProcess",
+                            "name": "SqlLog to LogNolio",
+                            "children": []
+                        }]
+                    },
+                    {
+                        "componentName": "ORACLE",
+                        "properties": [
+                            {
+                                "name": "failFast",
+                                "value": "false"
+                            },
+                            {
+                                "name": "runOnlyOnFirst",
+                                "value": "false"
+                            },
+                            {
+                                "name": "maxIteration",
+                                "value": "-1"
+                            }
+                        ],
+                        "type": "componentEnvironmentIterator",
+                        "name": "d0667149c65388f18024ee104bdedb",
+                        "children": [{
+                            "componentName": "ORACLE",
+                            "componentProcessName": "SQL_LOG",
+                            "allowFailure": false,
+                            "properties": {
+                                "SBM_BaselineId": "${p:SBM_BaselineId}",
+                                "SBM_Folder": "${p:SBM_Folder}",
+                                "SBM_Depot": "${p:SBM_Depot}",
+                                "SBM_Nom_Log": "${p:SBM_Nom_Log}",
+                                "SBM_Projet": "${p:SBM_Projet}"
+                            },
+                            "type": "componentProcess",
+                            "name": "Check & Compress SqlLogs",
+                            "children": []
+                        }]
+                    },
+                    {
+                        "status": "SUCCESS",
+                        "type": "setStatus",
+                        "name": "e6ba4e02b7ed53932d1f918274a5c3",
+                        "children": []
+                    }
+                ]
+            },
+            "propDefs": []
+        }
+    ],
+    "taskDefs": []
+}
