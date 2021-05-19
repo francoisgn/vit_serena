@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <header>
+    <identifier id="fr.nauzikaa.sra.community.plugin.GroovyAdvance" version="2" name="GroovyAdvance"/>
+    <description>
+    The Groovy plugin is an automation based plugin. It is run during the deployment to execute user defined Groovy scripts.
+</description>
+    <tag>Community/Nauzikaa/Scripting/GroovyAdvance</tag>
+  </header>
+  <step-type name="Run Groovy Script">
+    <description>Execute a groovy script.</description>
+    <properties>
+      <property name="scriptBody" required="true">
+        <property-ui type="textAreaBox"
+                     label="Script"
+                     description="Enter the script code to execute. A java.util.Properties variable for output properties to upload to the server is in the context called outProps and another containing all the input properties will be attached called inProps"/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value='-cp'/>
+      <arg file='classes'/>
+      <arg file="run_groovy_script.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  
+  <step-type name="Run Groovy Advance Script">
+    <description>Execute a groovy script. List of include lib that can be used:ant-apache-oro.jar:ant-apache-regexp.jar:ant-apache-xalan2.jar:ant-commons-logging.jar:ant-commons-net.jar:ant-javamail.jar:ant-jsch.jar:commons-codec-1.6.jar:commons-io-2.4.jar:commons-logging-1.1.3.jar:commons-net-3.3.jar:fluent-hc-4.3.1.jar:Groovy.jar:httpclient-4.3.1.jar:httpclient-cache-4.3.1.jar:httpcore-4.3.jar:httpmime-4.3.1.jar:ini4j-0.5.2.jar:jsch-0.1.50.jar:xmltask.jar</description>
+    
+    <properties>
+      <property name="externalLibJARList" required="false">
+        <property-ui type="textBox" label="List of External JAR to addto classpath" description="List of jar file (full path)  that must to add to classpath." default-value=""/>
+      </property>
+      <property name="externalDirList" required="false">
+        <property-ui type="textBox" label="List of External Dir to add to classpath" description="List of dirname (full path)  that must to add to classpath." default-value=""/>
+      </property>
+      <property name="scriptBody" required="true">
+        <property-ui type="textAreaBox"
+                     label="Script"
+                     description="Enter the script code to execute. A java.util.Properties variable for output properties to upload to the server is in the context called outProps and another containing all the input properties will be attached called inProps"/>
+      </property>
+      
+      
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="${p:externalDirList}:${p:externalLibJARList}:classes:lib/Groovy.jar"/>
+      <arg file="run_groovy_script.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  
+</plugin>
